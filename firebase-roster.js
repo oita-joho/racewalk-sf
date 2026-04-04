@@ -16,9 +16,9 @@ import {
 
 // ここを自分の Firebase 設定に変更
 const firebaseConfig = {
-  apiKey: "ここに apiKey",
-  authDomain: "ここに authDomain",
-  projectId: "ここに projectId"
+  apiKey: "AIzaSyBYOAGmD4O5In_C9q3-IFIeOz-X4YI-gNI",
+  authDomain: "racewalk-system.firebaseapp.com",
+  projectId: "racewalk-system"
 };
 
 const fbApp = initializeApp(firebaseConfig);
