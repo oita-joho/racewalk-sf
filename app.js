@@ -458,7 +458,6 @@ function connect() {
       hostSelectedGroup = msg.group || hostSelectedGroup;
       hostRosterCache = Array.isArray(msg.roster) ? msg.roster : [];
       render();
-      alert("読み込みました。修正後にFirebase保存してください。");
       return;
     }
 
@@ -1507,7 +1506,7 @@ function bindEvents() {
       hostRosterCache = roster;
       hostDirty = true;
       render();
-
+      alert("読み込みました。修正後にFirebase保存してください。");
       if (doSave) {
         send({ op: "SAVE_ROSTER", group: hostSelectedGroup, roster: hostRosterCache });
         hostDirty = false;
