@@ -43,110 +43,49 @@ function setStatus(msg) {
 }
 
 function ensureFirebaseBox() {
-  const mount = byId("firebaseMount") || document.body;
+  const appRoot = document.querySelector("#app");
+  if (!appRoot) return;
+
   let box = byId("firebaseBox");
-  if (box) return;
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "firebaseBox";
+    box.className = "card";
+    box.innerHTML = `
+      <div class="big">Firebase 名簿保存</div>
 
-  box = document.createElement("div");
-  box.id = "firebaseBox";
-  box.className = "card";
-  box.innerHTML = `
-    <div class="big">Firebase 保存</div>
+      <div class="row">
+        <input id="fbEmail" type="email" placeholder="メールアドレス">
+        <input id="fbPassword" type="password" placeholder="パスワード">
+        <button id="fbLoginBtn" type="button">ログイン</button>
+        <button id="fbLogoutBtn" type="button">ログアウト</button>
+      </div>
 
-    <div class="row">
-      <input id="fbEmail" type="email" placeholder="メールアドレス">
-      <input id="fbPassword" type="password" placeholder="パスワード">
-      <button id="fbLoginBtn" type="button">ログイン</button>
-      <button id="fbLogoutBtn" type="button">ログアウト</button>
-    </div>
+      <div class="row">
+        <input id="fbEventId" type="text" inputmode="numeric" maxlength="10" placeholder="大会ID（10桁）">
+        <button id="fbSaveBtn" type="button">現在の名簿をFirebase保存</button>
+        <button id="fbLoadBtn" type="button">Firebaseから読込</button>
+      </div>
 
-    <div class="row">
-      <input id="fbEventId" type="text" inputmode="numeric" maxlength="10" placeholder="大会ID（10桁）">
-      <button id="fbSaveBtn" type="button">保存</button>
-      <button id="fbLoadBtn" type="button">読込</button>
-    </div>
+      <div id="fbStatus">未ログイン</div>
+    `;
+  }
 
-    <div id="fbStatus">未ログイン</div>
-  `;
+  const csvTitle = Array.from(document.querySelectorAll(".big"))
+    .find(el => (el.textContent || "").includes("CSVから名簿を読み込み"));
 
-  mount.appendChild(box);
+  if (csvTitle) {
+    const csvCard = csvTitle.closest(".card");
+    if (csvCard) {
+      appRoot.insertBefore(box, csvCard);
+    } else {
+      appRoot.appendChild(box);
+    }
+  } else {
+    appRoot.appendChild(box);
+  }
+
   bindEvents();
-}
-
-window.ensureFirebaseBox = ensureFirebaseBox;
-
-async function saveRoster() {
-  const eventId = onlyDigits(byId("fbEventId")?.value);
-  if (!/^\d{10}$/.test(eventId)) {
-    setStatus("大会IDは10桁で入力してください");
-    return;
-  }
-
-  const roster = Array.isArray(window.currentRoster) ? window.currentRoster : [];
-  if (!roster.length) {
-    setStatus("保存する名簿がありません");
-    return;
-  }
-
-  await setDoc(
-    doc(db, "events", eventId),
-    {
-      eventId,
-      updatedAt: Date.now()
-    },
-    { merge: true }
-  );
-
-  for (const row of roster) {
-    await setDoc(
-      doc(db, "events", eventId, "roster", String(row.lane)),
-      {
-        lane: safe(row.lane),
-        bib: safe(row.bib),
-        name: safe(row.name),
-        team: safe(row.team),
-        updatedAt: Date.now()
-      },
-      { merge: true }
-    );
-  }
-
-  setStatus(`保存しました: ${eventId} / ${roster.length}件`);
-}
-
-async function loadRoster() {
-  const eventId = onlyDigits(byId("fbEventId")?.value);
-  if (!/^\d{10}$/.test(eventId)) {
-    setStatus("大会IDは10桁で入力してください");
-    return;
-  }
-
-  const eventSnap = await getDoc(doc(db, "events", eventId));
-  if (!eventSnap.exists()) {
-    setStatus(`大会IDが見つかりません: ${eventId}`);
-    return;
-  }
-
-  const snap = await getDocs(collection(db, "events", eventId, "roster"));
-  const roster = snap.docs
-    .map(d => d.data())
-    .sort((a, b) => (parseInt(a.lane, 10) || 0) - (parseInt(b.lane, 10) || 0));
-
-  if (!roster.length) {
-    setStatus(`名簿がありません: ${eventId}`);
-    return;
-  }
-
-  window.currentRoster = roster;
-
-  if (typeof window.render === "function") {
-    const appRosterRef = roster;
-    window.render();
-    // render後も currentRoster を維持
-    window.currentRoster = appRosterRef;
-  }
-
-  setStatus(`読込しました: ${eventId} / ${roster.length}件`);
 }
 
 function bindEvents() {
