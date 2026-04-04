@@ -1833,3 +1833,12 @@ window.setFirebaseLoginState = function (loggedIn) {
   }
   render();
 };
+window.getHostRoster = function () {
+  return Array.isArray(hostRosterCache) ? hostRosterCache.slice() : [];
+};
+
+window.setHostRoster = function (roster) {
+  hostRosterCache = Array.isArray(roster) ? roster.slice() : [];
+  hostDirty = true;
+  render();
+};
