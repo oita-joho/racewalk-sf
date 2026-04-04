@@ -165,9 +165,37 @@ function init() {
   onAuthStateChanged(auth, (user) => {
     if (user) {
       setStatus(`ログイン中: ${user.email}`);
+      if (typeof window.setFirebaseLoginState === "function") {
+        window.setFirebaseLoginState(true);
+      }
     } else {
       setStatus("未ログイン");
+      if (typeof window.setFirebaseLoginState === "function") {
+        window.setFirebaseLoginState(false);
+      }
     }
+  });
+
+  scheduleEnsureFirebaseBox();
+
+  const appRoot = document.getElementById("app");
+  if (appRoot) {
+    const observer = new MutationObserver(() => {
+      scheduleEnsureFirebaseBox();
+    });
+
+    observer.observe(appRoot, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  window.addEventListener("hashchange", () => {
+    scheduleEnsureFirebaseBox();
+  });
+
+  window.addEventListener("load", () => {
+    scheduleEnsureFirebaseBox();
   });
 }
 
