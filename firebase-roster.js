@@ -150,12 +150,14 @@ function bindEvents() {
 function init() {
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      setStatus(`ログイン中: ${user.email}`);
+      setStatus("ログイン中: " + user.email);
+
       if (typeof window.setFirebaseLoginState === "function") {
         window.setFirebaseLoginState(true);
       }
     } else {
       setStatus("未ログイン");
+
       if (typeof window.setFirebaseLoginState === "function") {
         window.setFirebaseLoginState(false);
       }
@@ -184,6 +186,3 @@ function init() {
     scheduleEnsureFirebaseBox();
   });
 }
-
-window.ensureFirebaseBox = ensureFirebaseBox;
-init();
