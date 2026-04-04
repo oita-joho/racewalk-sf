@@ -1219,13 +1219,7 @@ function hostView() {
       </div>
     </div>
 
-    <div class="card">
-      <div class="big">編集名簿（${list.length}名）</div>
-      <table>
-        <thead><tr><th>レーン</th><th>競技者番号</th><th>氏名</th><th>所属</th><th>操作</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
+
 
     <div class="card">
       <div class="big">CSVから名簿を読み込み</div>
@@ -1242,6 +1236,13 @@ function hostView() {
         <button id="csvImportBtn" class="secondary">読み込み（反映）</button>
         <button id="csvImportSaveBtn">読み込み→保存</button>
       </div>
+    </div>
+        <div class="card">
+      <div class="big">編集名簿（${list.length}名）</div>
+      <table>
+        <thead><tr><th>レーン</th><th>競技者番号</th><th>氏名</th><th>所属</th><th>操作</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
     </div>
 
     ${tokenTableHtml()}
