@@ -1169,7 +1169,7 @@ function tokenTableHtml() {
     </div>
   `;
 }
-
+// ===== hostView =====
 function hostView() {
   const map = {};
   for (const a of hostRosterCache) map[String(a.lane)] = a;
