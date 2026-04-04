@@ -16,7 +16,9 @@ import {
   collection
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
 
 // ここを自分の Firebase 設定に変更
 const firebaseConfig = {
