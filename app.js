@@ -458,6 +458,7 @@ function connect() {
       hostSelectedGroup = msg.group || hostSelectedGroup;
       hostRosterCache = Array.isArray(msg.roster) ? msg.roster : [];
       render();
+      alert("読み込みました。修正後にFirebase保存してください。");
       return;
     }
 
