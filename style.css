@@ -141,3 +141,11 @@ th.clicksort:hover {
   color: #2563eb;      /* 青（告知） */
   font-weight: bold;
 }
+.success {
+  background-color: #2e7d32; /* 緑 */
+  color: #fff;
+  border: none;
+}
+.success:hover {
+  background-color: #1b5e20;
+}
