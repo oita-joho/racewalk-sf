@@ -1264,12 +1264,14 @@ function render() {
   else if (p === "/chiefjudge") app.innerHTML = chiefJudgeView();
   else app.innerHTML = judgeView();
 
-  if (p === "/host" && typeof window.ensureFirebaseBox === "function") {
-    window.ensureFirebaseBox();
-  }
-
   bindEvents();
   updateJudgeLiveUI();
+
+  if (p === "/host" && typeof window.ensureFirebaseBox === "function") {
+    requestAnimationFrame(() => {
+      window.ensureFirebaseBox();
+    });
+  }
 }
 
 // ===== bind =====
