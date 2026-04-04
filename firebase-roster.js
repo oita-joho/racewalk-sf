@@ -1,18 +1,23 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  collection
-} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+// Firebase一時停止
+// import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+// import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+// import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+//import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+//import {
+//  getAuth,
+//  signInWithEmailAndPassword,
+//  onAuthStateChanged,
+//  signOut
+//} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+//import {
+//  getFirestore,
+//  doc,
+//  setDoc,
+//  getDoc,
+//  getDocs,
+//  collection
+//} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 // ここを自分の Firebase 設定に変更
 const firebaseConfig = {
@@ -21,9 +26,9 @@ const firebaseConfig = {
   projectId: "racewalk-system"
 };
 
-const fbApp = initializeApp(firebaseConfig);
-const auth = getAuth(fbApp);
-const db = getFirestore(fbApp);
+//const fbApp = initializeApp(firebaseConfig);
+//const auth = getAuth(fbApp);
+//const db = getFirestore(fbApp);
 
 function byId(id) {
   return document.getElementById(id);
