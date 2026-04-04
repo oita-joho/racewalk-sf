@@ -1239,6 +1239,16 @@ function hostView() {
 
     <div class="card">
       <div class="row">
+        <input id="hLane" placeholder="レーン" style="width:120px">
+        <input id="hBib" placeholder="競技者番号（英数字）" style="min-width:220px;flex:1">
+        <input id="hName" placeholder="氏名（必須）" style="min-width:200px;flex:1">
+        <input id="hTeam" placeholder="所属（任意）" style="min-width:200px;flex:1">
+        <button id="upsertBtn">追加/更新</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row">
         <select id="groupSelect" style="min-width:200px">
           ${[1,2,3,4,5].map(g => `<option value="${g}" ${g===hostSelectedGroup?"selected":""}>グループ${g}</option>`).join("")}
         </select>
@@ -1249,15 +1259,7 @@ function hostView() {
       </div>
     </div>
 
-    <div class="card">
-      <div class="row">
-        <input id="hLane" placeholder="レーン" style="width:120px">
-        <input id="hBib" placeholder="競技者番号（英数字）" style="min-width:220px;flex:1">
-        <input id="hName" placeholder="氏名（必須）" style="min-width:200px;flex:1">
-        <input id="hTeam" placeholder="所属（任意）" style="min-width:200px;flex:1">
-        <button id="upsertBtn">追加/更新</button>
-      </div>
-    </div>
+
 
     ${firebaseEnabled ? '<div id="firebaseMount"></div>' : ''}
 
