@@ -94,21 +94,26 @@ function bindEvents() {
     };
   }
 
-  if (loginBtn) {
-    loginBtn.onclick = async () => {
-      try {
-        setStatus("ログイン中...");
-        await signInWithEmailAndPassword(
-          auth,
-          safe(byId("fbEmail")?.value),
-          byId("fbPassword")?.value || ""
-        );
-      } catch (e) {
-        console.error(e);
-        setStatus("ログイン失敗: " + (e?.message || e));
-      }
-    };
-  }
+if (loginBtn) {
+  loginBtn.onclick = async () => {
+    try {
+      setStatus("ログイン中...");
+
+      const email = safe(byId("fbEmail")?.value);
+      const password = byId("fbPassword")?.value || "";
+
+      console.log("[FB LOGIN] start", { email });
+
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+
+      console.log("[FB LOGIN] success", cred.user?.email);
+      setStatus("ログイン成功: " + (cred.user?.email || ""));
+    } catch (e) {
+      console.error("[FB LOGIN] error", e);
+      setStatus("ログイン失敗: " + (e?.code || "") + " " + (e?.message || e));
+    }
+  };
+}
 
   if (logoutBtn) {
     logoutBtn.onclick = async () => {
