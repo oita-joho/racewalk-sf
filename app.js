@@ -1196,29 +1196,7 @@ function hostView() {
         ①グループ決定　②CSVから名簿を読み込む　③保存➡開始　④
       </div>
     </div>
-    <div class="card">
-      <div class="big">CSVから名簿を読み込み</div>
-      <div class="notice" style="margin-top:6px">
-        形式：lane,bib,name,team（1行目ヘッダ可）／レーンは半角数字のみ。<br>
-        Excelで保存する場合は「CSV UTF-8（コンマ区切り）」推奨。
-      </div>
-      <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
-        <input id="csvFile" type="file" accept=".csv,text/csv" />
-        <select id="csvEnc">
-          <option value="utf-8" selected>UTF-8</option>
-          <option value="shift_jis">Shift-JIS</option>
-        </select>
-        <button id="csvImportBtn" class="secondary">読み込み（反映）</button>
-        <button id="csvImportSaveBtn">読み込み→保存</button>
-      </div>
-    </div>
-        <div class="card">
-      <div class="big">編集名簿（${list.length}名）</div>
-      <table>
-        <thead><tr><th>レーン</th><th>競技者番号</th><th>氏名</th><th>所属</th><th>操作</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
+
     <div class="card">
       <div class="row">
         <select id="groupSelect" style="min-width:200px">
@@ -1241,8 +1219,32 @@ function hostView() {
       </div>
     </div>
 
+    ${typeof firebaseRosterSectionHtml === "function" ? firebaseRosterSectionHtml() : ""}
 
+    <div class="card">
+      <div class="big">CSVから名簿を読み込み</div>
+      <div class="notice" style="margin-top:6px">
+        形式：lane,bib,name,team（1行目ヘッダ可）／レーンは半角数字のみ。<br>
+        Excelで保存する場合は「CSV UTF-8（コンマ区切り）」推奨。
+      </div>
+      <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
+        <input id="csvFile" type="file" accept=".csv,text/csv" />
+        <select id="csvEnc">
+          <option value="utf-8" selected>UTF-8</option>
+          <option value="shift_jis">Shift-JIS</option>
+        </select>
+        <button id="csvImportBtn" class="secondary">読み込み（反映）</button>
+        <button id="csvImportSaveBtn">読み込み→保存</button>
+      </div>
+    </div>
 
+    <div class="card">
+      <div class="big">編集名簿（${list.length}名）</div>
+      <table>
+        <thead><tr><th>レーン</th><th>競技者番号</th><th>氏名</th><th>所属</th><th>操作</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
 
     ${tokenTableHtml()}
     ${qrCardsHtml()}
