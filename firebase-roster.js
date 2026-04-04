@@ -186,3 +186,5 @@ function init() {
     scheduleEnsureFirebaseBox();
   });
 }
+window.ensureFirebaseBox = ensureFirebaseBox;
+init();
