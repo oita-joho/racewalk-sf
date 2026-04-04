@@ -1,0 +1,143 @@
+body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 0; background: #f6f7fb; }
+header { background: #111827; color: #fff; padding: 12px 16px; }
+main { padding: 16px; max-width: 980px; margin: 0 auto; }
+.card { background: #fff; border-radius: 12px; padding: 12px; margin: 10px 0; box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+input, select, button { font-size: 16px; padding: 10px; border-radius: 10px; border: 1px solid #d1d5db; }
+button { border: none; cursor: pointer; background: #2563eb; color: #fff; }
+button.secondary { background: #6b7280; }
+button.danger { background: #dc2626; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.big { font-size: 20px; font-weight: 700; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.badge { display:inline-block; padding: 4px 8px; border-radius: 999px; background:#e5e7eb; }
+.kv { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+.notice { color: #111827; background:#fff7ed; border:1px solid #fed7aa; padding:10px; border-radius:12px; }
+.ok {
+  color: green;
+  font-weight: bold;
+}
+@media print{
+ header, button {
+    display: none !important;
+  }
+  header, .row button, button, .secondary, .danger {
+    display: none !important;
+  }
+  .card{
+    box-shadow: none !important;
+    border: 1px solid #999 !important;
+  }
+  table th{
+    background: #eee !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+.badge-dsq1 {
+  background:#e53935;
+  color:white;
+  padding:2px 8px;
+  border-radius:6px;
+}
+
+.badge-dsq2 {
+  background:#1e88e5;
+  color:white;
+  padding:2px 8px;
+  border-radius:6px;
+}
+
+.badge-notice {
+  background:#fb8c00;
+  color:white;
+  padding:2px 8px;
+  border-radius:6px;
+}
+/* ===== ナビリンク視認性改善 ===== */
+header .nav a,
+header .nav a:visited {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+header .nav a:hover {
+  color: #ffd54f;   /* ホバー時だけ黄色 */
+}
+
+/* 役割バッジも見やすく */
+.badge {
+  background: #37474f;
+  color: #fff;
+}
+.alert {
+  color:#c62828;
+  font-weight:bold;
+}
+
+.caution {
+  color:#ef6c00;
+}
+th.clicksort {
+  cursor: pointer;
+  user-select: none;
+  text-decoration: underline;
+}
+th.clicksort:hover {
+  opacity: 0.8;
+}
+
+
+/* 共通 */
+.judge-btn {
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* 注意＝黄色 */
+.judge-btn.caution {
+  background-color: #f4c542;
+}
+
+/* 警告＝赤 */
+.judge-btn.warning {
+  background-color: #e74c3c;
+}
+.judge-btn.caution:active {
+  background-color: #d4a82f;
+}
+
+.judge-btn.warning:active {
+  background-color: #c0392b;
+}
+
+
+/* ===== 区分カラー ===== */
+
+.lv-caution {
+  color: #f59e0b;      /* オレンジ */
+  font-weight: bold;
+}
+
+.lv-warning {
+  color: #ef4444;      /* 赤 */
+  font-weight: bold;
+}
+
+.lv-dsq1,
+.lv-dsq2 {
+  color: #7c3aed;      /* 紫（失格） */
+  font-weight: bold;
+}
+
+.lv-notice {
+  color: #2563eb;      /* 青（告知） */
+  font-weight: bold;
+}
