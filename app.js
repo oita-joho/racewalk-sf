@@ -289,51 +289,49 @@ function buildRoleUrls() {
 }
 
 function qrCardsHtml() {
-  const list = buildRoleUrls();
+  const tokens = state.tokensData || {};
 
-  const cards = list.map((x) => `
-    <div class="card" style="padding:12px">
-      <div class="big" style="margin-bottom:8px">${esc(x.label)}</div>
-      <div style="margin-bottom:10px;text-align:center">
-        <img
-          src="${esc(qrImgUrl(x.url))}"
-          alt="${esc(x.label)} QR"
-          style="width:180px;height:180px;border:1px solid #ccc;border-radius:8px;background:#fff"
-        />
+  const roles = [
+    ["judge1", "審判1"],
+    ["judge2", "審判2"],
+    ["judge3", "審判3"],
+    ["judge4", "審判4"],
+    ["judge5", "審判5"],
+    ["chiefjudge", "審判主任"],
+    ["recorder", "記録"],
+    ["chief", "記録主任"],
+    ["host", "設定係"],
+  ];
+
+  const base = location.origin + location.pathname;
+
+  const cards = roles.map(([key, label]) => {
+    const token = tokens[key] || "";
+    const url = `${base}#/${key}?t=${token}`;
+    const qr = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
+
+    return `
+      <div class="card" style="width:200px; text-align:center;">
+        <div class="big">${esc(label)}</div>
+        <img src="${qr}" alt="QR">
+        <div style="font-size:12px; word-break:break-all; margin-top:6px;">
+          ${esc(url)}
+        </div>
       </div>
-      <div class="mono" style="font-size:12px;word-break:break-all;margin-bottom:10px">
-        ${esc(x.url)}
-      </div>
-      <div class="row" style="gap:8px;flex-wrap:wrap">
-        <button class="secondary" data-copy-url="${esc(x.url)}">URLコピー</button>
-        <a href="${esc(x.url)}" target="_blank" rel="noopener">
-          <button type="button">開く</button>
-        </a>
-      </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 
   return `
     <div class="card">
-      <div class="big">QRコード一覧</div>
-      <div class="notice" style="margin-top:6px">
-        各役割のURLをQRコード化しています。<br>
-        トークン再発行後は、古いQRは使えなくなります。
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button id="printQrBtn">QR一覧を印刷</button>
-      </div>
-    </div>
+      <details>
+        <summary class="big" style="cursor:pointer; margin-bottom:8px;">
+          QRコード一覧
+        </summary>
 
-    <div
-      style="
-        display:grid;
-        grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
-        gap:12px;
-        margin-top:12px;
-      "
-    >
-      ${cards}
+        <div class="row" style="flex-wrap:wrap;">
+          ${cards}
+        </div>
+      </details>
     </div>
   `;
 }
@@ -1141,6 +1139,7 @@ function boardView() {
 
 function tokenTableHtml() {
   const tokens = state.tokensData || {};
+
   const rows = [
     ["judge1", tokens.judge1 || ""],
     ["judge2", tokens.judge2 || ""],
@@ -1151,24 +1150,38 @@ function tokenTableHtml() {
     ["recorder", tokens.recorder || ""],
     ["chief", tokens.chief || ""],
     ["host", tokens.host || ""],
-  ].map(([name, token]) => `
+  ].map(([role, token]) => `
     <tr>
-      <td>${esc(name)}</td>
+      <td>${esc(role)}</td>
       <td class="mono">${esc(token)}</td>
-      <td><button data-regen="${esc(name)}" class="secondary">再発行</button></td>
+      <td>
+        <button type="button" class="secondary" data-regen="${esc(role)}">再発行</button>
+      </td>
     </tr>
   `).join("");
 
   return `
     <div class="card">
-      <div class="big">現在のトークン</div>
-      <table>
-        <thead><tr><th>役割</th><th>トークン</th><th>操作</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div class="row" style="margin-top:10px">
-        <button id="regenAllBtn" class="danger">全トークン再発行</button>
-      </div>
+      <details>
+        <summary class="big" style="cursor:pointer; margin-bottom:8px;">▶ 現在のトークン</summary>
+
+        <table>
+          <thead>
+            <tr>
+              <th>役割</th>
+              <th>トークン</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+
+        <div class="row" style="margin-top:10px;">
+          <button id="regenAllBtn" type="button" class="danger">全トークン再発行</button>
+        </div>
+      </details>
     </div>
   `;
 }
