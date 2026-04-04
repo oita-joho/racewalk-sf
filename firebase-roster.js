@@ -152,6 +152,83 @@ if (loginBtn) {
     };
   }
 }
+async function saveRoster() {
+  const eventId = onlyDigits(byId("fbEventId")?.value);
+  if (!/^\d{10}$/.test(eventId)) {
+    setStatus("大会IDは10桁で入力してください");
+    return;
+  }
+
+  const roster = typeof window.getHostRoster === "function"
+    ? window.getHostRoster()
+    : [];
+
+  if (!roster.length) {
+    setStatus("保存する名簿がありません");
+    return;
+  }
+
+  await setDoc(
+    doc(db, "events", eventId),
+    {
+      eventId,
+      updatedAt: Date.now()
+    },
+    { merge: true }
+  );
+
+  for (const row of roster) {
+    await setDoc(
+      doc(db, "events", eventId, "roster", String(row.lane)),
+      {
+        lane: safe(row.lane),
+        bib: safe(row.bib),
+        name: safe(row.name),
+        team: safe(row.team),
+        updatedAt: Date.now()
+      },
+      { merge: true }
+    );
+  }
+
+  setStatus(`保存しました: ${eventId} / ${roster.length}件`);
+}
+
+async function loadRoster() {
+  const eventId = onlyDigits(byId("fbEventId")?.value);
+  if (!/^\d{10}$/.test(eventId)) {
+    setStatus("大会IDは10桁で入力してください");
+    return;
+  }
+
+  const eventSnap = await getDoc(doc(db, "events", eventId));
+  if (!eventSnap.exists()) {
+    setStatus(`大会IDが見つかりません: ${eventId}`);
+    return;
+  }
+
+  const snap = await getDocs(collection(db, "events", eventId, "roster"));
+  const roster = snap.docs
+    .map(d => d.data())
+    .sort((a, b) => (parseInt(a.lane, 10) || 0) - (parseInt(b.lane, 10) || 0));
+
+  if (!roster.length) {
+    setStatus(`名簿がありません: ${eventId}`);
+    return;
+  }
+
+  if (typeof window.setHostRoster === "function") {
+    window.setHostRoster(roster);
+  }
+
+  setStatus(`読込しました: ${eventId} / ${roster.length}件`);
+}
+
+function scheduleEnsureFirebaseBox() {
+  requestAnimationFrame(() => {
+    ensureFirebaseBox();
+  });
+}
 function init() {
   onAuthStateChanged(auth, (user) => {
     if (user) {
