@@ -16,9 +16,9 @@ import {
 
 // ここを自分の Firebase 設定に変更
 const firebaseConfig = {
-  apiKey: "AIzaSyBYOAGmD4O5In_C9q3-IFIeOz-X4YI-gNI",
-  authDomain:  "racewalk-system.firebaseapp.com",
-  projectId: "racewalk-system"
+  apiKey: "ここに apiKey",
+  authDomain: "ここに authDomain",
+  projectId: "ここに projectId"
 };
 
 const fbApp = initializeApp(firebaseConfig);
@@ -43,6 +43,7 @@ function setStatus(msg) {
 }
 
 function ensureFirebaseBox() {
+  const mount = byId("firebaseMount") || document.body;
   let box = byId("firebaseBox");
   if (box) return;
 
@@ -50,16 +51,16 @@ function ensureFirebaseBox() {
   box.id = "firebaseBox";
   box.className = "card";
   box.innerHTML = `
-    <h3>Firebase 保存</h3>
+    <div class="big">Firebase 保存</div>
 
-    <div>
+    <div class="row">
       <input id="fbEmail" type="email" placeholder="メールアドレス">
       <input id="fbPassword" type="password" placeholder="パスワード">
       <button id="fbLoginBtn" type="button">ログイン</button>
       <button id="fbLogoutBtn" type="button">ログアウト</button>
     </div>
 
-    <div>
+    <div class="row">
       <input id="fbEventId" type="text" inputmode="numeric" maxlength="10" placeholder="大会ID（10桁）">
       <button id="fbSaveBtn" type="button">保存</button>
       <button id="fbLoadBtn" type="button">読込</button>
@@ -68,9 +69,11 @@ function ensureFirebaseBox() {
     <div id="fbStatus">未ログイン</div>
   `;
 
-  document.body.prepend(box);
+  mount.appendChild(box);
   bindEvents();
 }
+
+window.ensureFirebaseBox = ensureFirebaseBox;
 
 async function saveRoster() {
   const eventId = onlyDigits(byId("fbEventId")?.value);
@@ -137,9 +140,10 @@ async function loadRoster() {
   window.currentRoster = roster;
 
   if (typeof window.render === "function") {
+    const appRosterRef = roster;
     window.render();
-  } else {
-    location.reload();
+    // render後も currentRoster を維持
+    window.currentRoster = appRosterRef;
   }
 
   setStatus(`読込しました: ${eventId} / ${roster.length}件`);
@@ -216,12 +220,15 @@ function bindEvents() {
   }
 }
 
-ensureFirebaseBox();
+function init() {
+  ensureFirebaseBox();
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      setStatus(`ログイン中: ${user.email}`);
+    } else {
+      setStatus("未ログイン");
+    }
+  });
+}
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    setStatus(`ログイン中: ${user.email}`);
-  } else {
-    setStatus("未ログイン");
-  }
-});
+init();
