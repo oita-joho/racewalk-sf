@@ -18,6 +18,10 @@
 //  getDocs,
 //  collection
 //} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+const fbApp = {};
+const auth = {};
+const db = {};
+
 
 // ここを自分の Firebase 設定に変更
 const firebaseConfig = {
