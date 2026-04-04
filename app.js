@@ -1230,8 +1230,7 @@ function hostView() {
       <option value="utf-8" selected>UTF-8</option>
       <option value="shift_jis">Shift-JIS</option>
     </select>
-    <button id="csvImportBtn" class="secondary">読み込み（反映）</button>
-    <button id="csvImportSaveBtn">読み込み→保存</button>
+    <button id="csvImportBtn" class="success">読み込み（反映）</button>
   </div>
 </div>
 ` : ''}
@@ -1621,7 +1620,7 @@ function bindEvents() {
     });
 
     if (csvImportBtn) csvImportBtn.addEventListener("click", () => importCsv(false));
-if (csvImportSaveBtn) csvImportSaveBtn.addEventListener("click", () => importCsv(true));
+
 
 // ===== Firebase / CSV ON-OFF ボタン =====
 const fbBtn = document.getElementById("toggleFirebaseBtn");
