@@ -88,17 +88,16 @@ function bindEvents() {
   const loadBtn = byId("fbLoadBtn");
   const eventIdEl = byId("fbEventId");
 
-  if (eventIdEl && !eventIdEl.dataset.bound) {
-    eventIdEl.dataset.bound = "1";
-    eventIdEl.addEventListener("input", () => {
+  if (eventIdEl) {
+    eventIdEl.oninput = () => {
       eventIdEl.value = onlyDigits(eventIdEl.value);
-    });
+    };
   }
 
-  if (loginBtn && !loginBtn.dataset.bound) {
-    loginBtn.dataset.bound = "1";
-    loginBtn.addEventListener("click", async () => {
+  if (loginBtn) {
+    loginBtn.onclick = async () => {
       try {
+        setStatus("ログイン中...");
         await signInWithEmailAndPassword(
           auth,
           safe(byId("fbEmail")?.value),
@@ -108,24 +107,22 @@ function bindEvents() {
         console.error(e);
         setStatus("ログイン失敗: " + (e?.message || e));
       }
-    });
+    };
   }
 
-  if (logoutBtn && !logoutBtn.dataset.bound) {
-    logoutBtn.dataset.bound = "1";
-    logoutBtn.addEventListener("click", async () => {
+  if (logoutBtn) {
+    logoutBtn.onclick = async () => {
       try {
         await signOut(auth);
       } catch (e) {
         console.error(e);
         setStatus("ログアウト失敗: " + (e?.message || e));
       }
-    });
+    };
   }
 
-  if (saveBtn && !saveBtn.dataset.bound) {
-    saveBtn.dataset.bound = "1";
-    saveBtn.addEventListener("click", async () => {
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
       try {
         if (!auth.currentUser) {
           setStatus("先にログインしてください");
@@ -136,22 +133,20 @@ function bindEvents() {
         console.error(e);
         setStatus("保存失敗: " + (e?.message || e));
       }
-    });
+    };
   }
 
-  if (loadBtn && !loadBtn.dataset.bound) {
-    loadBtn.dataset.bound = "1";
-    loadBtn.addEventListener("click", async () => {
+  if (loadBtn) {
+    loadBtn.onclick = async () => {
       try {
         await loadRoster();
       } catch (e) {
         console.error(e);
         setStatus("読込失敗: " + (e?.message || e));
       }
-    });
+    };
   }
 }
-
 function init() {
   onAuthStateChanged(auth, (user) => {
     if (user) {
