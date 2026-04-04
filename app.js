@@ -1618,7 +1618,26 @@ function bindEvents() {
     });
 
     if (csvImportBtn) csvImportBtn.addEventListener("click", () => importCsv(false));
-    if (csvImportSaveBtn) csvImportSaveBtn.addEventListener("click", () => importCsv(true));
+if (csvImportSaveBtn) csvImportSaveBtn.addEventListener("click", () => importCsv(true));
+
+// ===== Firebase / CSV ON-OFF ボタン =====
+const fbBtn = document.getElementById("toggleFirebaseBtn");
+if (fbBtn) {
+  fbBtn.onclick = () => {
+    firebaseEnabled = !firebaseEnabled;
+    render();
+  };
+}
+
+const csvBtn = document.getElementById("toggleCsvBtn");
+if (csvBtn) {
+  csvBtn.onclick = () => {
+    csvEnabled = !csvEnabled;
+    render();
+  };
+}
+
+    
   }
 
   document.querySelectorAll("[data-regen]").forEach((btn) => {
