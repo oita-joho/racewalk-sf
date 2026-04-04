@@ -43,48 +43,41 @@ function setStatus(msg) {
 }
 
 function ensureFirebaseBox() {
-  const appRoot = document.querySelector("#app");
-  if (!appRoot) return;
+  const mount = byId("firebaseMount");
+  if (!mount) return;
 
   let box = byId("firebaseBox");
-  if (!box) {
-    box = document.createElement("div");
-    box.id = "firebaseBox";
-    box.className = "card";
-    box.innerHTML = `
-      <div class="big">Firebase 名簿保存</div>
-
-      <div class="row">
-        <input id="fbEmail" type="email" placeholder="メールアドレス">
-        <input id="fbPassword" type="password" placeholder="パスワード">
-        <button id="fbLoginBtn" type="button">ログイン</button>
-        <button id="fbLogoutBtn" type="button">ログアウト</button>
-      </div>
-
-      <div class="row">
-        <input id="fbEventId" type="text" inputmode="numeric" maxlength="10" placeholder="大会ID（10桁）">
-        <button id="fbSaveBtn" type="button">現在の名簿をFirebase保存</button>
-        <button id="fbLoadBtn" type="button">Firebaseから読込</button>
-      </div>
-
-      <div id="fbStatus">未ログイン</div>
-    `;
-  }
-
-  const csvTitle = Array.from(document.querySelectorAll(".big"))
-    .find(el => (el.textContent || "").includes("CSVから名簿を読み込み"));
-
-  if (csvTitle) {
-    const csvCard = csvTitle.closest(".card");
-    if (csvCard) {
-      appRoot.insertBefore(box, csvCard);
-    } else {
-      appRoot.appendChild(box);
+  if (box) {
+    if (box.parentNode !== mount) {
+      mount.appendChild(box);
     }
-  } else {
-    appRoot.appendChild(box);
+    bindEvents();
+    return;
   }
 
+  box = document.createElement("div");
+  box.id = "firebaseBox";
+  box.className = "card";
+  box.innerHTML = `
+    <div class="big">Firebase 名簿保存</div>
+
+    <div class="row">
+      <input id="fbEmail" type="email" placeholder="メールアドレス">
+      <input id="fbPassword" type="password" placeholder="パスワード">
+      <button id="fbLoginBtn" type="button">ログイン</button>
+      <button id="fbLogoutBtn" type="button">ログアウト</button>
+    </div>
+
+    <div class="row">
+      <input id="fbEventId" type="text" inputmode="numeric" maxlength="10" placeholder="大会ID（10桁）">
+      <button id="fbSaveBtn" type="button">現在の名簿をFirebase保存</button>
+      <button id="fbLoadBtn" type="button">Firebaseから読込</button>
+    </div>
+
+    <div id="fbStatus">未ログイン</div>
+  `;
+
+  mount.appendChild(box);
   bindEvents();
 }
 
