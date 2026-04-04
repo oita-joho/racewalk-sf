@@ -14,10 +14,6 @@ import {
   collection
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-const fbApp = initializeApp(firebaseConfig);
-const auth = getAuth(fbApp);
-const db = getFirestore(fbApp);
-
 // ここを自分の Firebase 設定に変更
 const firebaseConfig = {
   apiKey: "AIzaSyBYOAGmD4O5In_C9q3-IFIeOz-X4YI-gNI",
@@ -25,9 +21,9 @@ const firebaseConfig = {
   projectId: "racewalk-system"
 };
 
-//const fbApp = initializeApp(firebaseConfig);
-//const auth = getAuth(fbApp);
-//const db = getFirestore(fbApp);
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
 
 function byId(id) {
   return document.getElementById(id);
