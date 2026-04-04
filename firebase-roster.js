@@ -173,4 +173,3 @@ function init() {
 
 window.ensureFirebaseBox = ensureFirebaseBox;
 init();
-init();
