@@ -162,7 +162,6 @@ function bindEvents() {
 }
 
 function init() {
-  ensureFirebaseBox();
   onAuthStateChanged(auth, (user) => {
     if (user) {
       setStatus(`ログイン中: ${user.email}`);
@@ -172,4 +171,6 @@ function init() {
   });
 }
 
+window.ensureFirebaseBox = ensureFirebaseBox;
+init();
 init();
