@@ -361,6 +361,9 @@ let hostRosterCache = [];
 let hostForm = { lane: "", bib: "", name: "", team: "" };
 let hostDirty = false;
 let serverClockOffset = 0;
+let firebaseEnabled = true;
+let csvEnabled = true;
+let firebaseLoggedIn = false;
 
 // ===== time sync =====
 async function syncServerClock() {
@@ -1189,13 +1192,32 @@ function hostView() {
   `).join("");
 
   return shell("設定係（PC）", `
-    <div class="card">
-      <div class="notice">
-        ここで<strong>グループ1〜5</strong>の名簿を保存できます。<br>
-        当日は「このグループで開始」を押すだけで、全端末に名簿反映＋ログ初期化されます。<br>
-        ①グループ決定　②CSVから名簿を読み込む　③保存➡開始　④
-      </div>
-    </div>
+<div class="card">
+  <div class="notice">
+    ここで<strong>グループ1〜5</strong>の名簿を保存できます。<br>
+    当日は「このグループで開始」を押すだけで、全端末に名簿反映＋ログ初期化されます。<br>
+    ①グループ決定　②CSVから名簿を読み込む　③保存➡開始　④
+  </div>
+
+  <div class="row" style="margin-top:10px">
+    <button
+      id="toggleFirebaseBtn"
+      class="${firebaseEnabled ? '' : 'danger'}"
+      type="button"
+    >
+      Firebase：${firebaseEnabled ? 'ON' : 'OFF'}
+      ${firebaseLoggedIn ? '（ログイン済）' : ''}
+    </button>
+
+    <button
+      id="toggleCsvBtn"
+      class="${csvEnabled ? '' : 'danger'}"
+      type="button"
+    >
+      CSV：${csvEnabled ? 'ON' : 'OFF'}
+    </button>
+  </div>
+</div>
 
     <div class="card">
       <div class="row">
@@ -1219,24 +1241,26 @@ function hostView() {
       </div>
     </div>
 
-    <div id="firebaseMount"></div>
+    ${firebaseEnabled ? '<div id="firebaseMount"></div>' : ''}
 
-    <div class="card">
-      <div class="big">CSVから名簿を読み込み</div>
-      <div class="notice" style="margin-top:6px">
-        形式：lane,bib,name,team（1行目ヘッダ可）／レーンは半角数字のみ。<br>
-        Excelで保存する場合は「CSV UTF-8（コンマ区切り）」推奨。
-      </div>
-      <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
-        <input id="csvFile" type="file" accept=".csv,text/csv" />
-        <select id="csvEnc">
-          <option value="utf-8" selected>UTF-8</option>
-          <option value="shift_jis">Shift-JIS</option>
-        </select>
-        <button id="csvImportBtn" class="secondary">読み込み（反映）</button>
-        <button id="csvImportSaveBtn">読み込み→保存</button>
-      </div>
-    </div>
+    ${csvEnabled ? `
+<div class="card">
+  <div class="big">CSVから名簿を読み込み</div>
+  <div class="notice" style="margin-top:6px">
+    形式：lane,bib,name,team（1行目ヘッダ可）／レーンは半角数字のみ。<br>
+    Excelで保存する場合は「CSV UTF-8（コンマ区切り）」推奨。
+  </div>
+  <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
+    <input id="csvFile" type="file" accept=".csv,text/csv" />
+    <select id="csvEnc">
+      <option value="utf-8" selected>UTF-8</option>
+      <option value="shift_jis">Shift-JIS</option>
+    </select>
+    <button id="csvImportBtn" class="secondary">読み込み（反映）</button>
+    <button id="csvImportSaveBtn">読み込み→保存</button>
+  </div>
+</div>
+` : ''}
 
     <div class="card">
       <div class="big">編集名簿（${list.length}名）</div>
@@ -1780,3 +1804,10 @@ render();
 setInterval(() => {
   fetch("/api/time").catch(() => {});
 }, 5 * 60 * 1000);
+window.setFirebaseLoginState = function (loggedIn) {
+  firebaseLoggedIn = !!loggedIn;
+  if (firebaseLoggedIn) {
+    firebaseEnabled = true;
+  }
+  render();
+};
