@@ -1219,7 +1219,7 @@ function hostView() {
       </div>
     </div>
 
-    ${typeof firebaseRosterSectionHtml === "function" ? firebaseRosterSectionHtml() : ""}
+    <div id="firebaseMount"></div>
 
     <div class="card">
       <div class="big">CSVから名簿を読み込み</div>
@@ -1252,7 +1252,6 @@ function hostView() {
 }
 
 // ===== render =====
-// ===== render =====
 function render() {
   const p = routePath();
 
@@ -1264,6 +1263,10 @@ function render() {
   else if (p === "/chief") app.innerHTML = recorderView(true);
   else if (p === "/chiefjudge") app.innerHTML = chiefJudgeView();
   else app.innerHTML = judgeView();
+
+  if (p === "/host" && typeof window.ensureFirebaseBox === "function") {
+    window.ensureFirebaseBox();
+  }
 
   bindEvents();
   updateJudgeLiveUI();
