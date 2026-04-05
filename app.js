@@ -317,7 +317,7 @@ function qrCardsHtml() {
       <div class="qr-url">${esc(r.url)}</div>
       <div class="qr-actions">
         <button type="button" class="secondary" onclick="copyText(${JSON.stringify(r.url)})">URLコピー</button>
-        <button type="button" onclick="window.open(${JSON.stringify(r.url)}, '_blank')">開く</button>
+        <a class="open-link-btn" href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">開く</a>
       </div>
     </div>
   `).join("");
