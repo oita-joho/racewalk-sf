@@ -1186,109 +1186,113 @@ function tokenTableHtml() {
 }
 // ===== hostView =====
 function hostView() {
-  const map = {};
-  for (const a of hostRosterCache) map[String(a.lane)] = a;
-  const list = Object.values(map).sort((a, b) => (parseInt(a.lane) || 0) - (parseInt(b.lane) || 0));
+  const list = Array.isArray(hostRosterCache)
+    ? hostRosterCache.slice().sort((a, b) => (parseInt(a.lane, 10) || 0) - (parseInt(b.lane, 10) || 0))
+    : [];
 
-  const rows = list.map((a) => `
-      <tr>
-        <td>${esc(a.lane)}</td>
-        <td>${esc(a.bib || "")}</td>
-        <td>${esc(a.name || "")}</td>
-        <td>${esc(a.team || "")}</td>
-        <td>
-          <button class="secondary" data-edit="${esc(a.lane)}">編集</button>
-          <button class="danger" data-del="${esc(a.lane)}">削除</button>
-        </td>
-      </tr>
+  const rows = list.map(a => `
+    <tr>
+      <td>${esc(a.lane || "")}</td>
+      <td>${esc(a.bib || "")}</td>
+      <td>${esc(a.name || "")}</td>
+      <td>${esc(a.team || "")}</td>
+      <td>
+        <button type="button" data-edit-lane="${esc(a.lane || "")}" class="secondary">編集</button>
+        <button type="button" data-del-lane="${esc(a.lane || "")}" class="danger">削除</button>
+      </td>
+    </tr>
   `).join("");
 
-  return shell("設定係（PC）", `
-<div class="card">
-  <div class="notice">
-    ここで<strong>グループ1〜5</strong>の名簿を保存できます。<br>
-    当日は「このグループで開始」を押すだけで、全端末に名簿反映＋ログ初期化されます。<br>
-    ①グループ決定　②CSVから名簿を読み込む　③保存➡開始　④
-  </div>
-
-  <div class="row" style="margin-top:10px">
-    <button
-      id="toggleFirebaseBtn"
-      class="${firebaseEnabled ? '' : 'danger'}"
-      type="button"
-    >
-      Firebase：${firebaseEnabled ? 'ON' : 'OFF'}
-      ${firebaseLoggedIn ? '（ログイン済）' : ''}
-    </button>
-
-    <button
-      id="toggleCsvBtn"
-      class="${csvEnabled ? '' : 'danger'}"
-      type="button"
-    >
-      CSV：${csvEnabled ? 'ON' : 'OFF'}
-    </button>
-  </div>
-   ${csvEnabled ? `
-<div class="card">
-  <div class="big">CSVから名簿を読み込み</div>
-  <div class="notice" style="margin-top:6px">
-    形式：lane,bib,name,team（1行目ヘッダ可）／レーンは半角数字のみ。<br>
-    Excelで保存する場合は「CSV UTF-8（コンマ区切り）」推奨。
-  </div>
-  <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
-    <input id="csvFile" type="file" accept=".csv,text/csv" />
-    <select id="csvEnc">
-      <option value="utf-8" selected>UTF-8</option>
-      <option value="shift_jis">Shift-JIS</option>
-    </select>
-    <button id="csvImportBtn" class="success">読み込み（反映）</button>
-  </div>
-</div>
-` : ''}
-</div>
-
+  return shell("設定係", `
     <div class="card">
-      <div class="row">
-        <input id="hLane" placeholder="レーン" style="width:120px">
-        <input id="hBib" placeholder="競技者番号（英数字）" style="min-width:220px;flex:1">
-        <input id="hName" placeholder="氏名（必須）" style="min-width:200px;flex:1">
-        <input id="hTeam" placeholder="所属（任意）" style="min-width:200px;flex:1">
-        <button id="upsertBtn">追加/更新</button>
+      <div class="notice">
+        設定係では、名簿の読込・編集・保存、開始グループの切替、トークン確認、QR印刷ができます。<br>
+        必要な項目だけ開いて使ってください。
       </div>
     </div>
 
-    <div class="card">
-      <div class="row">
-        <select id="groupSelect" style="min-width:200px">
-          ${[1,2,3,4,5].map(g => `<option value="${g}" ${g===hostSelectedGroup?"selected":""}>グループ${g}</option>`).join("")}
-        </select>
-        <button id="loadBtn" class="secondary">読み込み</button>
-        <button id="saveBtn">保存</button>
-        <button id="applyBtn">このグループで開始（名簿反映＋ログ初期化）</button>
-        <button id="clearBtn" class="danger">このグループ名簿を全消去</button>
+    ${csvEnabled ? `
+      <div class="card">
+        <details>
+          <summary class="big" style="cursor:pointer;">CSVから名簿を読み込み</summary>
+
+          <div class="notice" style="margin-top:10px;">
+            形式：lane,bib,name,team（1行目ヘッダ可）／レーンは半角数字のみ。<br>
+            Excelで保存する場合は「CSV UTF-8（コンマ区切り）」推奨。
+          </div>
+
+          <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap;">
+            <input id="csvFile" type="file" accept=".csv,text/csv">
+            <select id="csvEnc">
+              <option value="utf-8" selected>UTF-8</option>
+              <option value="shift_jis">Shift-JIS</option>
+            </select>
+            <button id="csvImportBtn" class="success">読み込み（反映）</button>
+          </div>
+        </details>
       </div>
+    ` : ""}
+
+    <div class="card">
+      <details>
+        <summary class="big" style="cursor:pointer;">レーン入力</summary>
+
+        <div class="row" style="margin-top:10px;">
+          <input id="hLane" placeholder="レーン" style="width:120px" value="${esc(hostForm?.lane || "")}">
+          <input id="hBib" placeholder="競技者番号（英数字）" style="min-width:220px;flex:1" value="${esc(hostForm?.bib || "")}">
+          <input id="hName" placeholder="氏名（必須）" style="min-width:200px;flex:1" value="${esc(hostForm?.name || "")}">
+          <input id="hTeam" placeholder="所属（任意）" style="min-width:200px;flex:1" value="${esc(hostForm?.team || "")}">
+          <button id="upsertBtn">追加/更新</button>
+        </div>
+      </details>
     </div>
 
+    <div class="card">
+      <details>
+        <summary class="big" style="cursor:pointer;">グループ設定</summary>
 
+        <div class="row" style="margin-top:10px;">
+          <select id="groupSelect" style="min-width:200px">
+            ${[1,2,3,4,5].map(g => `
+              <option value="${g}" ${g === hostSelectedGroup ? "selected" : ""}>グループ${g}</option>
+            `).join("")}
+          </select>
 
-    ${firebaseEnabled ? '<div id="firebaseMount"></div>' : ''}
+          <button id="loadBtn" class="secondary">読み込み</button>
+          <button id="saveBtn">保存</button>
+          <button id="applyBtn">このグループで開始（名簿反映＋ログ初期化）</button>
+          <button id="clearBtn" class="danger">このグループ名簿を全消去</button>
+        </div>
+      </details>
+    </div>
 
-   
+    ${firebaseEnabled ? `<div id="firebaseMount"></div>` : ""}
 
     <div class="card">
-      <div class="big">編集名簿（${list.length}名）</div>
-      <table>
-        <thead><tr><th>レーン</th><th>競技者番号</th><th>氏名</th><th>所属</th><th>操作</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
+      <details>
+        <summary class="big" style="cursor:pointer;">編集名簿（${list.length}名）</summary>
+
+        <table style="margin-top:10px;">
+          <thead>
+            <tr>
+              <th>レーン</th>
+              <th>競技者番号</th>
+              <th>氏名</th>
+              <th>所属</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || `<tr><td colspan="5">名簿はまだありません。</td></tr>`}
+          </tbody>
+        </table>
+      </details>
     </div>
 
     ${tokenTableHtml()}
     ${qrCardsHtml()}
   `);
 }
-
 // ===== render =====
 function render() {
   const p = routePath();
