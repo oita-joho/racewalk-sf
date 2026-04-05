@@ -241,3 +241,17 @@ th.clicksort:hover {
     display: none !important;
   }
 }
+details {
+  width: 100%;
+}
+
+summary {
+  list-style: auto;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 4px 0;
+}
+
+summary:hover {
+  opacity: 0.85;
+}
