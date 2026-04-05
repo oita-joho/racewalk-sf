@@ -287,55 +287,54 @@ function buildRoleUrls() {
     { key: "board", label: "掲示板", url: `${base}/#/board` },
   ];
 }
+function copyText(text) {
+  navigator.clipboard.writeText(text)
+    .then(() => alert("URLをコピーしました"))
+    .catch(() => alert("コピーできませんでした"));
+}
 
+function printQrList() {
+  window.print();
+}
 function qrCardsHtml() {
-  const tokens = state.tokensData || {};
+  const roles = buildRoleUrls();
 
-  const roles = [
-    ["judge1", "審判1"],
-    ["judge2", "審判2"],
-    ["judge3", "審判3"],
-    ["judge4", "審判4"],
-    ["judge5", "審判5"],
-    ["chiefjudge", "審判主任"],
-    ["recorder", "記録"],
-    ["chief", "記録主任"],
-    ["host", "設定係"],
-  ];
-
-  const base = location.origin + location.pathname;
-
-  const cards = roles.map(([key, label]) => {
-    const token = tokens[key] || "";
-    const url = `${base}#/${key}?t=${token}`;
-    const qr = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
-
-    return `
-      <div class="card" style="width:200px; text-align:center;">
-        <div class="big">${esc(label)}</div>
-        <img src="${qr}" alt="QR">
-        <div style="font-size:12px; word-break:break-all; margin-top:6px;">
-          ${esc(url)}
-        </div>
+  const cards = roles.map((r) => `
+    <div class="qr-card">
+      <div class="qr-title">${esc(r.label)}</div>
+      <img src="${qrImgUrl(r.url)}" alt="${esc(r.label)} QR">
+      <div class="qr-url">${esc(r.url)}</div>
+      <div class="qr-actions">
+        <button type="button" class="secondary" onclick="copyText(${JSON.stringify(r.url)})">URLコピー</button>
+        <button type="button" onclick="window.open(${JSON.stringify(r.url)}, '_blank')">開く</button>
       </div>
-    `;
-  }).join("");
+    </div>
+  `).join("");
 
   return `
     <div class="card">
-      <details>
-        <summary class="big" style="cursor:pointer; margin-bottom:8px;">
+      <details open>
+        <summary class="big" style="cursor:pointer; margin-bottom:12px;">
           QRコード一覧
         </summary>
 
-        <div class="row" style="flex-wrap:wrap;">
-          ${cards}
+        <div id="qrPrintArea">
+          <div class="qr-print-box">
+            <div class="qr-print-message">
+              各役割のURLをQRコード化しています。<br>
+              トークン再発行後は、古いQRは使えなくなります。
+            </div>
+            <button type="button" onclick="printQrList()">QR一覧を印刷</button>
+          </div>
+
+          <div class="qr-grid">
+            ${cards}
+          </div>
         </div>
       </details>
     </div>
   `;
 }
-
 // ===== state =====
 const state = {};
 let socket = null;
