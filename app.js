@@ -313,7 +313,7 @@ function qrCardsHtml() {
 
   return `
     <div class="card">
-      <details open>
+      <details>   ← ★ここを open なしにする
         <summary class="big" style="cursor:pointer; margin-bottom:12px;">
           QRコード一覧
         </summary>
