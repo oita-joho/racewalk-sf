@@ -1216,7 +1216,8 @@ function hostView() {
     <div class="card">
       <div class="notice">
         設定係では、名簿の読込・編集・保存、開始グループの切替、トークン確認、QR印刷ができます。<br>
-        必要な項目だけ開いて使ってください。
+        必要な項目だけ開いて使ってください。<br>
+        手順0.事前にCSVを読み込む 1.fireに保存 2.
       </div>
       <div class="card">
   <div class="notice">
