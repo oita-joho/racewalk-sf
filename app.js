@@ -1218,6 +1218,30 @@ function hostView() {
         設定係では、名簿の読込・編集・保存、開始グループの切替、トークン確認、QR印刷ができます。<br>
         必要な項目だけ開いて使ってください。
       </div>
+      <div class="card">
+  <div class="notice">
+    ここで名簿管理の機能を切り替えできます。
+  </div>
+
+  <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap;">
+    <button
+      id="toggleFirebaseBtn"
+      class="${firebaseEnabled ? "" : "danger"}"
+      type="button"
+    >
+      Firebase：${firebaseEnabled ? "ON" : "OFF"}
+      ${firebaseLoggedIn ? "（ログイン済）" : ""}
+    </button>
+
+    <button
+      id="toggleCsvBtn"
+      class="${csvEnabled ? "" : "danger"}"
+      type="button"
+    >
+      CSV：${csvEnabled ? "ON" : "OFF"}
+    </button>
+  </div>
+</div>
     </div>
 
     ${csvEnabled ? `
