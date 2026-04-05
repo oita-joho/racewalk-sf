@@ -287,6 +287,17 @@ function buildRoleUrls() {
     { key: "board", label: "掲示板", url: `${base}/#/board` },
   ];
 }
+
+function regenToken(target) {
+  if (!confirm(`${target} のトークンを再発行しますか？`)) return;
+  send({ op: "REGEN_TOKEN", target });
+}
+
+function regenAllTokens() {
+  if (!confirm("全トークンを再発行しますか？\n古いQRは使えなくなります。")) return;
+  send({ op: "REGEN_ALL_TOKENS" });
+}
+
 function copyText(text) {
   navigator.clipboard.writeText(text)
     .then(() => alert("URLをコピーしました"))
@@ -313,12 +324,10 @@ function qrCardsHtml() {
 
   return `
     <div class="card">
-      <details>   ← ★ここを open なしにする
-        <summary class="big" style="cursor:pointer; margin-bottom:12px;">
-          QRコード一覧
-        </summary>
+      <details>
+        <summary class="big" style="cursor:pointer;">QRコード一覧</summary>
 
-        <div id="qrPrintArea">
+        <div id="qrPrintArea" style="margin-top:10px;">
           <div class="qr-print-box">
             <div class="qr-print-message">
               各役割のURLをQRコード化しています。<br>
@@ -1140,21 +1149,21 @@ function tokenTableHtml() {
   const tokens = state.tokensData || {};
 
   const rows = [
-    ["judge1", tokens.judge1 || ""],
-    ["judge2", tokens.judge2 || ""],
-    ["judge3", tokens.judge3 || ""],
-    ["judge4", tokens.judge4 || ""],
-    ["judge5", tokens.judge5 || ""],
-    ["chiefjudge", tokens.chiefjudge || ""],
-    ["recorder", tokens.recorder || ""],
-    ["chief", tokens.chief || ""],
-    ["host", tokens.host || ""],
-  ].map(([role, token]) => `
+    ["judge1", "審判1"],
+    ["judge2", "審判2"],
+    ["judge3", "審判3"],
+    ["judge4", "審判4"],
+    ["judge5", "審判5"],
+    ["chiefjudge", "審判主任"],
+    ["recorder", "記録"],
+    ["chief", "記録主任"],
+    ["host", "host"],
+  ].map(([key, label]) => `
     <tr>
-      <td>${esc(role)}</td>
-      <td class="mono">${esc(token)}</td>
+      <td>${esc(label)}</td>
+      <td class="mono">${esc(tokens[key] || "")}</td>
       <td>
-        <button type="button" class="secondary" data-regen="${esc(role)}">再発行</button>
+        <button type="button" class="secondary" onclick="regenToken(${JSON.stringify(key)})">再発行</button>
       </td>
     </tr>
   `).join("");
@@ -1162,9 +1171,9 @@ function tokenTableHtml() {
   return `
     <div class="card">
       <details>
-        <summary class="big" style="cursor:pointer; margin-bottom:8px;">▶ 現在のトークン</summary>
+        <summary class="big" style="cursor:pointer;">現在のトークン</summary>
 
-        <table>
+        <table style="margin-top:10px;">
           <thead>
             <tr>
               <th>役割</th>
@@ -1177,8 +1186,8 @@ function tokenTableHtml() {
           </tbody>
         </table>
 
-        <div class="row" style="margin-top:10px;">
-          <button id="regenAllBtn" type="button" class="danger">全トークン再発行</button>
+        <div style="margin-top:12px;">
+          <button type="button" class="danger" onclick="regenAllTokens()">全トークン再発行</button>
         </div>
       </details>
     </div>
@@ -1213,7 +1222,7 @@ function hostView() {
 
     ${csvEnabled ? `
       <div class="card">
-        <details>
+        <details open>
           <summary class="big" style="cursor:pointer;">CSVから名簿を読み込み</summary>
 
           <div class="notice" style="margin-top:10px;">
