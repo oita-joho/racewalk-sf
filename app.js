@@ -1157,7 +1157,6 @@ function tokenTableHtml() {
     ["chiefjudge", "審判主任"],
     ["recorder", "記録"],
     ["chief", "記録主任"],
-    ["host", "host"],
   ].map(([key, label]) => `
     <tr>
       <td>${esc(label)}</td>
