@@ -9,7 +9,6 @@ const crypto = require("crypto");
 const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
-let serverClockOffset = 0;
 
 // =====================================================
 // Config / Files
@@ -20,6 +19,11 @@ const ROSTER_FILE = (g) => path.join(DATA_DIR, `roster_g${g}.json`);
 const TOKENS_FILE = path.join(DATA_DIR, "tokens.json");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+// host だけ固定
+const FIXED_TOKENS = {
+  host: "rw_HOST_z8T1mV6qK3c9",
+};
 
 // =====================================================
 // Utilities
@@ -41,8 +45,8 @@ function hhmmNow() {
     hour12: false,
   }).formatToParts(new Date());
 
-  const hh = parts.find(p => p.type === "hour")?.value || "00";
-  const mm = parts.find(p => p.type === "minute")?.value || "00";
+  const hh = parts.find((p) => p.type === "hour")?.value || "00";
+  const mm = parts.find((p) => p.type === "minute")?.value || "00";
 
   return `${hh}:${mm}`;
 }
@@ -58,31 +62,6 @@ function localIPv4Candidates() {
   return out;
 }
 
-// =====================================================
-// Token auth (tokens.json)
-// =====================================================
-// =====================================================
-// Token auth (fixed tokens)
-// =====================================================
-const TOKENS = {
-  judge1: "rw_J1_a8K3mP4xQ7n2",
-  judge2: "rw_J2_f6L9tR1vY3c8",
-  judge3: "rw_J3_p2N7kD5sW8m4",
-  judge4: "rw_J4_q9H2xB6uT1z5",
-  judge5: "rw_J5_m4C8jL2pR7y9",
-  chiefjudge: "rw_CJ_v7K1nQ5dX9p3",
-  recorder: "rw_REC_t3M8wF2kL6q1",
-  chief: "rw_CHIEF_b5P9rN4xD7s2",
-  host: "rw_HOST_z8T1mV6qK3c9",
-};
-
-function loadTokens() {
-  return TOKENS;
-}
-
-function saveTokens(tokens) {
-  // 固定トークンなので保存しない
-}
 function makeToken(len = 16) {
   return crypto.randomBytes(24).toString("base64url").slice(0, len);
 }
@@ -97,11 +76,42 @@ function defaultTokens() {
     chiefjudge: makeToken(),
     recorder: makeToken(),
     chief: makeToken(),
-    host: makeToken(),
   };
 }
 
+function mergeWithDefaults(obj) {
+  return {
+    ...defaultTokens(),
+    ...(obj && typeof obj === "object" ? obj : {}),
+  };
+}
 
+// =====================================================
+// Token auth (tokens.json)
+// host は固定、他は保存型
+// =====================================================
+function loadTokens() {
+  if (!fs.existsSync(TOKENS_FILE)) {
+    const initial = defaultTokens();
+    fs.writeFileSync(TOKENS_FILE, JSON.stringify(initial, null, 2), "utf8");
+    return initial;
+  }
+
+  try {
+    const v = JSON.parse(fs.readFileSync(TOKENS_FILE, "utf8"));
+    const merged = mergeWithDefaults(v);
+    fs.writeFileSync(TOKENS_FILE, JSON.stringify(merged, null, 2), "utf8");
+    return merged;
+  } catch {
+    const initial = defaultTokens();
+    fs.writeFileSync(TOKENS_FILE, JSON.stringify(initial, null, 2), "utf8");
+    return initial;
+  }
+}
+
+function saveTokens(tokens) {
+  fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2), "utf8");
+}
 
 function judgeIdToRole(judgeId) {
   const s = String(judgeId || "").trim().toUpperCase();
@@ -114,15 +124,14 @@ function judgeIdToRole(judgeId) {
 }
 
 function tokenOkFor(role, judgeId, token) {
-  // board と host は一時公開
-  if (role === "board") return true; // boardは公開のまま
-
-if (role === "host") {
-  return TOKENS.host === String(token || "").trim();
-}
+  if (role === "board") return true; // board は公開のまま
 
   const t = String(token || "").trim();
   if (!t) return false;
+
+  if (role === "host") {
+    return FIXED_TOKENS.host === t;
+  }
 
   const tokens = loadTokens();
 
@@ -182,7 +191,6 @@ const state = {
   raceId: String(Date.now()),
   seq: 1,
   currentGroup: 1,
-
   rosterByLane: {},
   byId: {},
   activeKeyToId: {},
@@ -310,14 +318,14 @@ app.get("/api/time", (req, res) => {
     hour12: false,
   }).formatToParts(now);
 
-  const hh = parts.find(p => p.type === "hour")?.value || "00";
-  const mm = parts.find(p => p.type === "minute")?.value || "00";
-  const ss = parts.find(p => p.type === "second")?.value || "00";
+  const hh = parts.find((p) => p.type === "hour")?.value || "00";
+  const mm = parts.find((p) => p.type === "minute")?.value || "00";
+  const ss = parts.find((p) => p.type === "second")?.value || "00";
 
   res.json({
     hhmm: `${hh}:${mm}`,
     hhmmss: `${hh}:${mm}:${ss}`,
-    ts: now.getTime()
+    ts: now.getTime(),
   });
 });
 
@@ -441,7 +449,13 @@ wss.on("connection", (ws) => {
 
     if (op === "GET_TOKENS") {
       const tokens = loadTokens();
-      send(ws, { op: "TOKENS_DATA", tokens });
+      send(ws, {
+        op: "TOKENS_DATA",
+        tokens: {
+          ...tokens,
+          host: FIXED_TOKENS.host,
+        },
+      });
       return;
     }
 
@@ -449,7 +463,7 @@ wss.on("connection", (ws) => {
       const target = String(msg.target || "");
       const allowedTargets = [
         "judge1", "judge2", "judge3", "judge4", "judge5",
-        "chiefjudge", "recorder", "chief", "host",
+        "chiefjudge", "recorder", "chief",
       ];
 
       if (!allowedTargets.includes(target)) {
@@ -470,12 +484,15 @@ wss.on("connection", (ws) => {
     }
 
     if (op === "REGEN_ALL_TOKENS") {
-      const tokens = defaultTokens();
+      const tokens = defaultTokens(); // host は含めない
       saveTokens(tokens);
       send(ws, {
         op: "OK",
         kind: "REGEN_ALL_TOKENS",
-        tokens,
+        tokens: {
+          ...tokens,
+          host: FIXED_TOKENS.host,
+        },
       });
       return;
     }
@@ -602,21 +619,22 @@ wss.on("connection", (ws) => {
 // =====================================================
 server.listen(PORT, "0.0.0.0", () => {
   const ips = localIPv4Candidates();
+  const tokens = loadTokens();
 
   console.log(`Racewalk Web Host running: http://0.0.0.0:${PORT}`);
 
   if (ips.length) {
     const ip = ips[0];
-    console.log(`Judge1:       http://${ip}:${PORT}/#/judge?jid=J1&t=${TOKENS.judge1}`);
-    console.log(`Judge2:       http://${ip}:${PORT}/#/judge?jid=J2&t=${TOKENS.judge2}`);
-    console.log(`Judge3:       http://${ip}:${PORT}/#/judge?jid=J3&t=${TOKENS.judge3}`);
-    console.log(`Judge4:       http://${ip}:${PORT}/#/judge?jid=J4&t=${TOKENS.judge4}`);
-    console.log(`Judge5:       http://${ip}:${PORT}/#/judge?jid=J5&t=${TOKENS.judge5}`);
-    console.log(`ChiefJudge:   http://${ip}:${PORT}/#/chiefjudge?t=${TOKENS.chiefjudge}`);
-    console.log(`Recorder:     http://${ip}:${PORT}/#/recorder?t=${TOKENS.recorder}`);
-    console.log(`Chief(Reset): http://${ip}:${PORT}/#/chief?t=${TOKENS.chief}`);
+    console.log(`Judge1:       http://${ip}:${PORT}/#/judge?jid=J1&t=${tokens.judge1}`);
+    console.log(`Judge2:       http://${ip}:${PORT}/#/judge?jid=J2&t=${tokens.judge2}`);
+    console.log(`Judge3:       http://${ip}:${PORT}/#/judge?jid=J3&t=${tokens.judge3}`);
+    console.log(`Judge4:       http://${ip}:${PORT}/#/judge?jid=J4&t=${tokens.judge4}`);
+    console.log(`Judge5:       http://${ip}:${PORT}/#/judge?jid=J5&t=${tokens.judge5}`);
+    console.log(`ChiefJudge:   http://${ip}:${PORT}/#/chiefjudge?t=${tokens.chiefjudge}`);
+    console.log(`Recorder:     http://${ip}:${PORT}/#/recorder?t=${tokens.recorder}`);
+    console.log(`Chief(Reset): http://${ip}:${PORT}/#/chief?t=${tokens.chief}`);
     console.log(`Board:        http://${ip}:${PORT}/#/board`);
-    console.log(`Host(PC):     http://${ip}:${PORT}/#/host?t=${TOKENS.host}`);
+    console.log(`Host(PC):     http://${ip}:${PORT}/#/host?t=${FIXED_TOKENS.host}`);
   }
 
   console.log(`WS: ws://<PC-IP>:${PORT}/ws`);
