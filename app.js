@@ -1645,7 +1645,9 @@ function bindEvents() {
     }
 
 document.querySelectorAll("[data-edit-lane]").forEach((btn) => {
-  btn.addEventListener("click", () => {
+  btn.onclick = () => {
+    alert("編集を押しました");
+
     const lane = btn.getAttribute("data-edit-lane");
     const row = hostRosterCache.find((x) => String(x.lane) === String(lane));
     if (!row) return;
@@ -1664,18 +1666,18 @@ document.querySelectorAll("[data-edit-lane]").forEach((btn) => {
       if (details) details.open = true;
       document.querySelector("#hName")?.focus();
     }, 0);
-  });
+  };
 });
 
 document.querySelectorAll("[data-del-lane]").forEach((btn) => {
-  btn.addEventListener("click", () => {
+  btn.onclick = () => {
     const lane = btn.getAttribute("data-del-lane");
     if (!confirm(`レーン${lane}を削除しますか？`)) return;
 
     hostRosterCache = hostRosterCache.filter((x) => String(x.lane) !== String(lane));
     hostDirty = true;
     render();
-  });
+  };
 });
     if (csvImportBtn) csvImportBtn.addEventListener("click", () => importCsv(false));
 
