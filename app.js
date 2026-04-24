@@ -1644,30 +1644,39 @@ function bindEvents() {
       });
     }
 
-    document.querySelectorAll("[data-edit]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const lane = btn.getAttribute("data-edit");
-        const row = hostRosterCache.find((x) => String(x.lane) === String(lane));
-        if (!row) return;
-        hostForm = {
-          lane: String(row.lane || ""),
-          bib: String(row.bib || ""),
-          name: String(row.name || ""),
-          team: String(row.team || ""),
-        };
-        render();
-      });
-    });
+document.querySelectorAll("[data-edit-lane]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const lane = btn.getAttribute("data-edit-lane");
+    const row = hostRosterCache.find((x) => String(x.lane) === String(lane));
+    if (!row) return;
 
-    document.querySelectorAll("[data-del]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const lane = btn.getAttribute("data-del");
-        hostRosterCache = hostRosterCache.filter((x) => String(x.lane) !== String(lane));
-        hostDirty = true;
-        render();
-      });
-    });
+    hostForm = {
+      lane: String(row.lane || ""),
+      bib: String(row.bib || ""),
+      name: String(row.name || ""),
+      team: String(row.team || ""),
+    };
 
+    render();
+
+    setTimeout(() => {
+      const details = document.querySelector("#hLane")?.closest("details");
+      if (details) details.open = true;
+      document.querySelector("#hName")?.focus();
+    }, 0);
+  });
+});
+
+document.querySelectorAll("[data-del-lane]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const lane = btn.getAttribute("data-del-lane");
+    if (!confirm(`レーン${lane}を削除しますか？`)) return;
+
+    hostRosterCache = hostRosterCache.filter((x) => String(x.lane) !== String(lane));
+    hostDirty = true;
+    render();
+  });
+});
     if (csvImportBtn) csvImportBtn.addEventListener("click", () => importCsv(false));
 
 
