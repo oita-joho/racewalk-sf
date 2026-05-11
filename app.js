@@ -371,6 +371,64 @@ let firebaseEnabled = true;
 let csvEnabled = true;
 let firebaseLoggedIn = false;
 
+// ===== sound =====
+let soundEnabled = false;
+
+function enableSound() {
+  soundEnabled = true;
+
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    gain.gain.value = 0.01;
+
+    osc.start();
+
+    setTimeout(() => {
+      osc.stop();
+      ctx.close();
+    }, 50);
+
+  } catch(e) {
+    console.warn(e);
+  }
+}
+
+function playBeep(freq = 880, ms = 300) {
+  if (!soundEnabled) return;
+
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.value = freq;
+
+    gain.gain.value = 0.2;
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+
+    setTimeout(() => {
+      osc.stop();
+      ctx.close();
+    }, ms);
+
+  } catch(e) {
+    console.warn("sound error", e);
+  }
+}
+
 // ===== time sync =====
 async function syncServerClock() {
   try {
@@ -444,6 +502,41 @@ function connect() {
 
       if (msg.item && msg.item.id) {
         const inf = msg.item;
+        // ===== sound notify =====
+
+// 記録係：警告・失格
+if (
+  role === "recorder" &&
+  inf.status === "pending" &&
+  (
+    inf.level === "warning" ||
+    inf.level === "dsq1" ||
+    inf.level === "dsq2"
+  )
+) {
+  playBeep(900, 300);
+}
+
+// 掲示板：確定
+if (
+  role === "board" &&
+  inf.status === "confirmed" &&
+  (
+    inf.level === "warning" ||
+    inf.level === "dsq1" ||
+    inf.level === "dsq2"
+  )
+) {
+  playBeep(1200, 400);
+}
+
+// 主任：通告
+if (
+  role === "chiefjudge" &&
+  inf.level === "notice"
+) {
+  playBeep(600, 700);
+}
 
         const idx = itemsAll.findIndex((x) => x.id === inf.id);
         if (idx >= 0) itemsAll[idx] = inf;
@@ -647,6 +740,10 @@ function shell(title, bodyHtml) {
         <span class="badge">${esc(role)}${judgeId ? ` / ${esc(judgeId)}` : ""}</span>
         <span class="badge">グループ${esc(currentGroup)}</span>
         <span class="badge mono">${esc(infoLine)}</span>
+
+<button id="enableSoundBtn" class="secondary">
+  音ON
+</button>
       </div>
 
 ${role === "host" ? currentHostLinksHtml() : ""}
@@ -1351,6 +1448,19 @@ function render() {
 
 // ===== bind =====
 function bindEvents() {
+
+  const enableSoundBtn = $("#enableSoundBtn");
+
+  if (enableSoundBtn) {
+    enableSoundBtn.onclick = () => {
+      enableSound();
+
+      enableSoundBtn.textContent = "音ON済";
+      enableSoundBtn.disabled = true;
+
+      playBeep(1200, 200);
+    };
+  }
   const p = routePath();
 
   const laneInput = $("#laneInput");
