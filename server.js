@@ -68,14 +68,15 @@ function makeToken(len = 16) {
 
 function defaultTokens() {
   return {
-    judge1: makeToken(),
-    judge2: makeToken(),
-    judge3: makeToken(),
-    judge4: makeToken(),
-    judge5: makeToken(),
-    chiefjudge: makeToken(),
-    recorder: makeToken(),
-    chief: makeToken(),
+    judge1: "rw_J1_7fK2mQpL8x",
+    judge2: "rw_J2_B4nYt3Qa9v",
+    judge3: "rw_J3_U8dLp2Zc5k",
+    judge4: "rw_J4_H6xNm1Tr7s",
+    judge5: "rw_J5_W9qAz4Mv2e",
+
+    chiefjudge: "rw_CJ_X5pLm8Qr2n",
+    recorder: "rw_REC_K7tVb3Yp6m",
+    chief: "rw_CHIEF_R4xQn9Td1c",
   };
 }
 
