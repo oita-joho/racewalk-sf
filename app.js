@@ -360,7 +360,7 @@ let itemsAll = [];
 let items = [];
 
 let infoLine = "接続中...";
-
+let connectionState = "connecting";
 let uiLane = "";
 let hostSelectedGroup = 1;
 let hostRosterCache = [];
@@ -444,12 +444,14 @@ async function syncServerClock() {
 
 // ===== ws =====
 function connect() {
+  connectionState = "connecting";
   infoLine = `接続中... ${wsUrl()}`;
   render();
 
   socket = new WebSocket(wsUrl());
 
   socket.onopen = () => {
+    connectionState = "open";
     hello();
 
     if (role === "host") {
@@ -582,6 +584,7 @@ if (
   };
 
   socket.onclose = () => {
+    connectionState = "closed";
     infoLine = "切断…再接続します";
     render();
     setTimeout(connect, 1200);
@@ -739,7 +742,17 @@ function shell(title, bodyHtml) {
         <div class="big">${esc(title)}</div>
         <span class="badge">${esc(role)}${judgeId ? ` / ${esc(judgeId)}` : ""}</span>
         <span class="badge">グループ${esc(currentGroup)}</span>
-        <span class="badge mono">${esc(infoLine)}</span>
+        <span class="badge mono">
+  ${
+    connectionState === "open"
+      ? "🟢 接続OK"
+      : connectionState === "connecting"
+      ? "🟡 接続中"
+      : "🔴 切断"
+  }
+</span>
+
+<span class="badge mono">${esc(infoLine)}</span>
 
 <button id="enableSoundBtn" class="secondary">
   音ON
