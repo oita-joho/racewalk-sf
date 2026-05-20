@@ -475,7 +475,7 @@ function connect() {
       itemsAll = msg.items || [];
       items = buildViewItems(itemsAll);
 
-      infoLine = `接続OK（raceId=${raceId} / グループ${currentGroup}）`;
+      infoLine = `G${currentGroup}`;
       render();
       return;
     }
@@ -497,7 +497,7 @@ function connect() {
         items = [];
         raceId = msg.raceId || "";
         currentGroup = msg.currentGroup || currentGroup;
-        infoLine = `接続OK（raceId=${raceId} / グループ${currentGroup}）`;
+        infoLine = `G${currentGroup}`;
         render();
         return;
       }
