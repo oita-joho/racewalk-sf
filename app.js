@@ -373,7 +373,7 @@ let firebaseLoggedIn = false;
 
 // ===== sound =====
 let soundEnabled = false;
-
+let pendingSend = null;
 function enableSound() {
   soundEnabled = true;
 
@@ -855,7 +855,33 @@ function judgeView() {
         <button id="bentWarnBtn" class="judge-btn warning" ${bentWarnDisabled ? "disabled" : ""}>ベント 警告</button>
       </div>
     </div>
+${pendingSend ? `
+<div class="card">
+  <div class="big">送信確認</div>
 
+  <div style="margin-top:10px;font-size:22px;font-weight:bold;">
+    ${
+      pendingSend.type === "loss"
+        ? "ロス警告"
+        : "ベント警告"
+    }
+  </div>
+
+  <div style="margin-top:10px;font-size:20px;">
+    レーン ${esc(pendingSend.lane)}
+  </div>
+
+  <div class="row" style="margin-top:15px;">
+    <button id="confirmSendBtn" class="danger">
+      送信
+    </button>
+
+    <button id="cancelSendBtn" class="secondary">
+      キャンセル
+    </button>
+  </div>
+</div>
+` : ""}
     <div class="card" id="athleteCard">
       ${athlete ? `
         <div class="big">${esc(athlete.name)}</div>
@@ -1520,7 +1546,12 @@ function bindEvents() {
   if (lossWarnBtn) {
     lossWarnBtn.addEventListener("click", () => {
       const lane = (uiLane || "").trim();
-      send({ op: "NEW_WARNING", lane, type: "loss", judgeId });
+      pendingSend = {
+  lane,
+  type: "loss"
+};
+
+render();
       uiLane = "";
       render();
       setTimeout(() => {
@@ -1550,7 +1581,12 @@ function bindEvents() {
   if (bentWarnBtn) {
     bentWarnBtn.addEventListener("click", () => {
       const lane = (uiLane || "").trim();
-      send({ op: "NEW_WARNING", lane, type: "bent", judgeId });
+      pendingSend = {
+  lane,
+  type: "bent"
+};
+
+render();
       uiLane = "";
       render();
       setTimeout(() => {
