@@ -754,9 +754,7 @@ function shell(title, bodyHtml) {
 
 <span class="badge mono">${esc(infoLine)}</span>
 
-<button id="enableSoundBtn" class="secondary">
-  音ON
-</button>
+
       </div>
 
 ${role === "host" ? currentHostLinksHtml() : ""}
