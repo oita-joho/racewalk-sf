@@ -485,7 +485,17 @@ wss.on("connection", (ws) => {
     }
 
     if (op === "REGEN_ALL_TOKENS") {
-      const tokens = defaultTokens(); // host は含めない
+      const tokens = {
+  judge1: makeToken(),
+  judge2: makeToken(),
+  judge3: makeToken(),
+  judge4: makeToken(),
+  judge5: makeToken(),
+
+  chiefjudge: makeToken(),
+  recorder: makeToken(),
+  chief: makeToken(),
+};// host は含めない
       saveTokens(tokens);
       send(ws, {
         op: "OK",
