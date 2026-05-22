@@ -1946,6 +1946,33 @@ window.onload = () => window.print();
       w.document.close();
     });
   }
+  const confirmSendBtn = $("#confirmSendBtn");
+
+if (confirmSendBtn) {
+  confirmSendBtn.onclick = () => {
+
+    send({
+      op: "NEW_WARNING",
+      lane: pendingSend.lane,
+      type: pendingSend.type,
+      judgeId
+    });
+
+    pendingSend = null;
+    uiLane = "";
+
+    render();
+  };
+}
+
+const cancelSendBtn = $("#cancelSendBtn");
+
+if (cancelSendBtn) {
+  cancelSendBtn.onclick = () => {
+    pendingSend = null;
+    render();
+  };
+}
 }
 
 function hhmmTo12(hhmm) {
