@@ -753,7 +753,18 @@ function shell(title, bodyHtml) {
 </span>
 
 <span class="badge mono">${esc(infoLine)}</span>
-
+${
+  role === "recorder" ||
+  role === "board" ||
+  role === "chief" ||
+  role === "chiefjudge"
+    ? `
+      <button id="enableSoundBtn" class="secondary">
+        音ON
+      </button>
+    `
+    : ""
+}
 
       </div>
 
