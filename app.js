@@ -827,7 +827,8 @@ function judgeView() {
     })
     .map((x) => `
       <tr>
-        <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
+  <td>${cautionNo}</td>
+  <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
         <td>${esc(x.lane)}</td>
         <td>${esc(typeLabel(x.type))}</td>
         <td class="lv-${esc(x.level)}">${esc(levelLabel(x.level))}</td>
@@ -946,7 +947,8 @@ function chiefJudgeView() {
     .sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0))
     .map((x) => `
       <tr>
-        <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
+  <td>${cautionNo}</td>
+  <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
         <td>${esc(x.lane)}</td>
         <td>${esc(typeLabel(x.type))}</td>
         <td>${esc(levelLabel(x.level))}</td>
@@ -1148,7 +1150,8 @@ function recorderView(isChief=false){
 
       return `
         <tr>
-          <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
+  <td>${cautionNo}</td>
+  <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
           <td>${esc(x.lane)} ${esc(who)}</td>
           <td>${esc(typeLabel(x.type))}</td>
           <td class="alert">${esc(label)}</td>
@@ -1160,13 +1163,17 @@ function recorderView(isChief=false){
 
   const bottomRows = list
     .filter(x => x.level==="caution")
-    .map(x=>{
+.sort((a,b)=>(a.tsMs||0)-(b.tsMs||0))
+.map(x=>{
+
+  cautionNo++;
       const a = rosterByLane[String(x.lane)];
       const who = a ? `（${a.name}）` : "";
 
       return `
         <tr>
-          <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
+  <td>${cautionNo}</td>
+  <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
           <td>${esc(x.lane)} ${esc(who)}</td>
           <td>${esc(typeLabel(x.type))}</td>
           <td class="caution">注意</td>
