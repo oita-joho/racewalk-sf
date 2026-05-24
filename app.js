@@ -1148,7 +1148,6 @@ function recorderView(isChief=false){
 
       return `
         <tr>
-  <td>${cautionNo}</td>
   <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
           <td>${esc(x.lane)} ${esc(who)}</td>
           <td>${esc(typeLabel(x.type))}</td>
@@ -1195,7 +1194,6 @@ let cautionNo = 0;
       <table>
         <thead>
           <tr>
-          <th>No</th>
             <th>時刻</th>
             <th>レーン</th>
             <th>内容</th>
@@ -1232,6 +1230,7 @@ let cautionNo = 0;
       <table>
         <thead>
           <tr>
+          <th>No</th>
             <th>時刻</th>
             <th>レーン</th>
             <th>反則</th>
