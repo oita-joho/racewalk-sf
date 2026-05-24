@@ -827,7 +827,6 @@ function judgeView() {
     })
     .map((x) => `
       <tr>
-  <td>${cautionNo}</td>
   <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
         <td>${esc(x.lane)}</td>
         <td>${esc(typeLabel(x.type))}</td>
@@ -947,7 +946,6 @@ function chiefJudgeView() {
     .sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0))
     .map((x) => `
       <tr>
-  <td>${cautionNo}</td>
   <td class="mono">${esc(hhmmTo12(x.hhmm))}</td>
         <td>${esc(x.lane)}</td>
         <td>${esc(typeLabel(x.type))}</td>
@@ -1160,7 +1158,7 @@ function recorderView(isChief=false){
         </tr>
       `;
     }).join("");
-
+let cautionNo = 0;
   const bottomRows = list
     .filter(x => x.level==="caution")
 .sort((a,b)=>(a.tsMs||0)-(b.tsMs||0))
