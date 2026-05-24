@@ -1159,6 +1159,7 @@ function recorderView(isChief=false){
       `;
     }).join("");
 let cautionNo = 0;
+  
   const bottomRows = list
     .filter(x => x.level==="caution")
 .sort((a,b)=>(a.tsMs||0)-(b.tsMs||0))
@@ -1194,6 +1195,7 @@ let cautionNo = 0;
       <table>
         <thead>
           <tr>
+          <th>No</th>
             <th>時刻</th>
             <th>レーン</th>
             <th>内容</th>
