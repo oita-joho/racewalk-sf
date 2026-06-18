@@ -1040,18 +1040,16 @@ function updateJudgeLiveUI(){
   const athlete = lane ? athleteForLane(lane) : null;
 
   const athleteCard = $("#athleteCard");
-  if (athleteCard){
-    athleteCard.innerHTML = athlete ? `
-      <div class="card" id="athleteCard">
-  ${!lane ? `` : athlete ? `
+
+if (athleteCard) {
+  athleteCard.innerHTML = !lane ? `` : athlete ? `
     <div class="big">${esc(athlete.name)}</div>
     <div>${athlete.bib ? `競技者番号: ${esc(athlete.bib)}` : ""}</div>
     <div>${athlete.team ? esc(athlete.team) : ""}</div>
   ` : `
     <div>未登録レーン（設定係が名簿を登録してください）</div>
-  `}
-</div>
-  }
+  `;
+}
 
   if (p === "/judge" || p === "/"){
     const lossCautionBtn = $("#lossCautionBtn");
