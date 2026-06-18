@@ -1574,8 +1574,6 @@ function bindEvents() {
 };
 
 render();
-      uiLane = "";
-      render();
       setTimeout(() => {
         const inp = $("#laneInput");
         if (inp) inp.focus();
@@ -1609,8 +1607,7 @@ render();
 };
 
 render();
-      uiLane = "";
-      render();
+
       setTimeout(() => {
         const inp = $("#laneInput");
         if (inp) inp.focus();
