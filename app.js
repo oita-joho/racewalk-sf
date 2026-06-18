@@ -894,12 +894,16 @@ ${pendingSend ? `
 </div>
 ` : ""}
     <div class="card" id="athleteCard">
-      ${athlete ? `
-        <div class="big">${esc(athlete.name)}</div>
-        <div>${athlete.bib ? `競技者番号: ${esc(athlete.bib)}` : ""}</div>
-        <div>${athlete.team ? esc(athlete.team) : ""}</div>
-      ` : `<div>未登録レーン（設定係が名簿を登録してください）</div>`}
-    </div>
+  ${!lane ? `
+    <div>レーンを入力してください</div>
+  ` : athlete ? `
+    <div class="big">${esc(athlete.name)}</div>
+    <div>${athlete.bib ? `競技者番号: ${esc(athlete.bib)}` : ""}</div>
+    <div>${athlete.team ? esc(athlete.team) : ""}</div>
+  ` : `
+    <div>未登録レーン（設定係が名簿を登録してください）</div>
+  `}
+</div>
 
     <div class="card">
       <div class="big">自分の送信履歴（分まで）</div>
