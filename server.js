@@ -159,7 +159,7 @@ function requiredRole(op) {
     op === "REGEN_ALL_TOKENS"
   ) return ["host"];
 
-  if (op === "CONFIRM") return ["recorder"];
+  if (op === "CONFIRM" || op === "CANCEL") return ["recorder"];
   if (op === "RESET") return ["chief"];
   if (op === "NEW_CAUTION" || op === "NEW_WARNING") return ["judge"];
   if (op === "NEW_CHIEF") return ["chiefjudge"];
@@ -520,7 +520,44 @@ wss.on("connection", (ws) => {
       broadcast({ op: "EVENT", kind: "UPDATE", item: inf });
       return;
     }
+if (op === "CANCEL") {
+  const id = String(msg.id || "");
+  const inf = state.byId[id];
 
+  if (!inf) return;
+
+  if (inf.level !== "warning") {
+    return reject(ws, "取消できるのは警告だけです");
+  }
+
+  inf.status = "cancelled";
+
+  // 警告取消後、同じ審判が同じレーンに再入力できるようにする
+  const lk = lockKey(
+    inf.raceId,
+    inf.judgeId,
+    inf.lane
+  );
+  delete state.judgeLaneWarnLock[lk];
+
+  // 同じ警告の重複チェックも解除する
+  const kThis = keyOf(
+    inf.raceId,
+    inf.judgeId,
+    inf.lane,
+    inf.type,
+    inf.level
+  );
+  delete state.activeKeyToId[kThis];
+
+  broadcast({
+    op: "EVENT",
+    kind: "UPDATE",
+    item: inf
+  });
+
+  return;
+}
     // -----------------------------
     // Chief actions
     // -----------------------------
