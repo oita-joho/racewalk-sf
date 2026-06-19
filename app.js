@@ -1106,9 +1106,31 @@ function recorderView(isChief=false){
       const a = rosterByLane[String(x.lane)];
       const who = a ? `（${a.name}）` : "";
 
-      const action = (x.status==="pending")
-        ? `<button data-confirm="${esc(x.id)}">確定</button>`
-        : `<span class="ok">確定済</span>`;
+const cancelBtn =
+  x.level === "warning"
+    ? `
+      <button
+        data-cancel="${esc(x.id)}"
+        data-lane="${esc(x.lane)}"
+        data-type="${esc(typeLabel(x.type))}"
+        data-judge="${esc(x.judgeId || "")}"
+        class="danger"
+      >
+        取消
+      </button>
+      `
+    : "";
+
+const action =
+  x.status === "pending"
+    ? `
+      <button data-confirm="${esc(x.id)}">確定</button>
+      ${cancelBtn}
+      `
+    : `
+      <span class="ok">確定済</span>
+      ${cancelBtn}
+      `;
 
       return `
         <tr>
