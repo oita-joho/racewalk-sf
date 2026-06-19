@@ -1642,7 +1642,28 @@ render();
       send({ op: "CONFIRM", id });
     });
   });
+document.querySelectorAll("[data-cancel]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const id = btn.getAttribute("data-cancel");
+    const lane = btn.getAttribute("data-lane") || "";
+    const type = btn.getAttribute("data-type") || "";
+    const judge = btn.getAttribute("data-judge") || "";
 
+    if (
+      !confirm(
+        `レーン${lane} ${type}警告（${judge}）を取り消しますか？\n\n` +
+        "取消後は、同じ審判が再入力できます。"
+      )
+    ) {
+      return;
+    }
+
+    send({
+      op: "CANCEL",
+      id
+    });
+  });
+});
   const csvBtn = $("#csvBtn");
   if (csvBtn) csvBtn.addEventListener("click", () => exportCsv());
 
