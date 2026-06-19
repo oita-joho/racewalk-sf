@@ -1106,31 +1106,9 @@ function recorderView(isChief=false){
       const a = rosterByLane[String(x.lane)];
       const who = a ? `（${a.name}）` : "";
 
-const cancelBtn =
-  x.level === "warning"
-    ? `
-      <button
-        data-cancel="${esc(x.id)}"
-        data-lane="${esc(x.lane)}"
-        data-type="${esc(typeLabel(x.type))}"
-        data-judge="${esc(x.judgeId || "")}"
-        class="danger"
-      >
-        取消
-      </button>
-      `
-    : "";
-
-const action =
-  x.status === "pending"
-    ? `
-      <button data-confirm="${esc(x.id)}">確定</button>
-      ${cancelBtn}
-      `
-    : `
-      <span class="ok">確定済</span>
-      ${cancelBtn}
-      `;
+const action = (x.status==="pending")
+  ? `<button data-confirm="${esc(x.id)}">確定</button>`
+  : `<span class="ok">確定済</span>`;
 
       return `
         <tr>
@@ -1169,9 +1147,31 @@ const action =
         x.level==="warning" ? "警告" :
         (x.level==="dsq1" || x.level==="dsq2") ? "失格" : "";
 
-      const action = (x.status==="pending")
-        ? `<button data-confirm="${esc(x.id)}">確定</button>`
-        : `<span class="ok">確定済</span>`;
+      const cancelBtn =
+  x.level === "warning"
+    ? `
+      <button
+        data-cancel="${esc(x.id)}"
+        data-lane="${esc(x.lane)}"
+        data-type="${esc(typeLabel(x.type))}"
+        data-judge="${esc(x.judgeId || "")}"
+        class="danger"
+      >
+        取消
+      </button>
+      `
+    : "";
+
+const action =
+  x.status === "pending"
+    ? `
+      <button data-confirm="${esc(x.id)}">確定</button>
+      ${cancelBtn}
+      `
+    : `
+      <span class="ok">確定済</span>
+      ${cancelBtn}
+      `;
 
       return `
         <tr>
