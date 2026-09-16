@@ -871,12 +871,12 @@ ${pendingSend ? `
   <div class="big">送信確認</div>
 
   <div style="margin-top:10px;font-size:22px;font-weight:bold;">
-    ${
-      pendingSend.type === "loss"
-        ? "ロス警告"
-        : "ベント警告"
-    }
-  </div>
+  ${
+    pendingSend.type === "loss"
+      ? `ロス${pendingSend.level === "caution" ? "注意" : "警告"}`
+      : `ベント${pendingSend.level === "caution" ? "注意" : "警告"}`
+  }
+</div>
 
   <div style="margin-top:10px;font-size:20px;">
     レーン ${esc(pendingSend.lane)}
@@ -1572,19 +1572,19 @@ function bindEvents() {
   });
 
   const lossCautionBtn = $("#lossCautionBtn");
-  if (lossCautionBtn) {
-    lossCautionBtn.addEventListener("click", () => {
-      const lane = (uiLane || "").trim();
-      send({ op: "NEW_CAUTION", lane, type: "loss", judgeId });
-      uiLane = "";
-      render();
-      setTimeout(() => {
-        const inp = $("#laneInput");
-        if (inp) inp.focus();
-        updateJudgeLiveUI();
-      }, 0);
-    });
-  }
+if (lossCautionBtn) {
+  lossCautionBtn.addEventListener("click", () => {
+    const lane = (uiLane || "").trim();
+
+    pendingSend = {
+      lane,
+      type: "loss",
+      level: "caution"
+    };
+
+    render();
+  });
+}
 
   const lossWarnBtn = $("#lossWarnBtn");
   if (lossWarnBtn) {
@@ -1593,6 +1593,7 @@ function bindEvents() {
       pendingSend = {
   lane,
   type: "loss"
+          level: "warning"
 };
 
 render();
@@ -1619,24 +1620,20 @@ render();
     });
   }
 
-  const bentWarnBtn = $("#bentWarnBtn");
-  if (bentWarnBtn) {
-    bentWarnBtn.addEventListener("click", () => {
-      const lane = (uiLane || "").trim();
-      pendingSend = {
-  lane,
-  type: "bent"
-};
+const bentCautionBtn = $("#bentCautionBtn");
+if (bentCautionBtn) {
+  bentCautionBtn.addEventListener("click", () => {
+    const lane = (uiLane || "").trim();
 
-render();
+    pendingSend = {
+      lane,
+      type: "bent",
+      level: "caution"
+    };
 
-      setTimeout(() => {
-        const inp = $("#laneInput");
-        if (inp) inp.focus();
-        updateJudgeLiveUI();
-      }, 0);
-    });
-  }
+    render();
+  });
+}
 
   const dsq1Btn = $("#dsq1Btn");
   if (dsq1Btn) {
@@ -2014,7 +2011,29 @@ if (confirmSendBtn) {
   confirmSendBtn.onclick = () => {
 
     send({
-      op: "NEW_WARNING",
+      const confirmSendBtn = $("#confirmSendBtn");
+
+if (confirmSendBtn) {
+  confirmSendBtn.onclick = () => {
+
+    const op =
+      pendingSend.level === "caution"
+        ? "NEW_CAUTION"
+        : "NEW_WARNING";
+
+    send({
+      op,
+      lane: pendingSend.lane,
+      type: pendingSend.type,
+      judgeId
+    });
+
+    pendingSend = null;
+    uiLane = "";
+
+    render();
+  };
+}
       lane: pendingSend.lane,
       type: pendingSend.type,
       judgeId
