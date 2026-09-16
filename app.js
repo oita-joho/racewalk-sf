@@ -2005,13 +2005,9 @@ window.onload = () => window.print();
       w.document.close();
     });
   }
-  const confirmSendBtn = $("#confirmSendBtn");
+  
 
-if (confirmSendBtn) {
-  confirmSendBtn.onclick = () => {
-
-    send({
-      const confirmSendBtn = $("#confirmSendBtn");
+const confirmSendBtn = $("#confirmSendBtn");
 
 if (confirmSendBtn) {
   confirmSendBtn.onclick = () => {
@@ -2034,17 +2030,6 @@ if (confirmSendBtn) {
     render();
   };
 }
-      lane: pendingSend.lane,
-      type: pendingSend.type,
-      judgeId
-    });
-
-    pendingSend = null;
-    uiLane = "";
-
-    render();
-  };
-}
 
 const cancelSendBtn = $("#cancelSendBtn");
 
@@ -2053,7 +2038,6 @@ if (cancelSendBtn) {
     pendingSend = null;
     render();
   };
-}
 }
 
 function hhmmTo12(hhmm) {
