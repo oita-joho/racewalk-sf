@@ -1592,7 +1592,7 @@ if (lossCautionBtn) {
       const lane = (uiLane || "").trim();
       pendingSend = {
   lane,
-  type: "loss"
+  type: "loss",
           level: "warning"
 };
 
