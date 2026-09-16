@@ -1571,7 +1571,10 @@ function bindEvents() {
     });
   });
 
-  const lossCautionBtn = $("#lossCautionBtn");
+ // ===== 審判：注意・警告の送信確認 =====
+
+// ロス 注意
+const lossCautionBtn = $("#lossCautionBtn");
 if (lossCautionBtn) {
   lossCautionBtn.addEventListener("click", () => {
     const lane = (uiLane || "").trim();
@@ -1586,40 +1589,8 @@ if (lossCautionBtn) {
   });
 }
 
-  const lossWarnBtn = $("#lossWarnBtn");
-  if (lossWarnBtn) {
-    lossWarnBtn.addEventListener("click", () => {
-      const lane = (uiLane || "").trim();
-      pendingSend = {
-  lane,
-  type: "loss",
-          level: "warning"
-};
 
-render();
-      setTimeout(() => {
-        const inp = $("#laneInput");
-        if (inp) inp.focus();
-        updateJudgeLiveUI();
-      }, 0);
-    });
-  }
-
-  const bentCautionBtn = $("#bentCautionBtn");
-  if (bentCautionBtn) {
-    bentCautionBtn.addEventListener("click", () => {
-      const lane = (uiLane || "").trim();
-      send({ op: "NEW_CAUTION", lane, type: "bent", judgeId });
-      uiLane = "";
-      render();
-      setTimeout(() => {
-        const inp = $("#laneInput");
-        if (inp) inp.focus();
-        updateJudgeLiveUI();
-      }, 0);
-    });
-  }
-
+// ベント 注意
 const bentCautionBtn = $("#bentCautionBtn");
 if (bentCautionBtn) {
   bentCautionBtn.addEventListener("click", () => {
@@ -1635,6 +1606,39 @@ if (bentCautionBtn) {
   });
 }
 
+
+// ロス 警告
+const lossWarnBtn = $("#lossWarnBtn");
+if (lossWarnBtn) {
+  lossWarnBtn.addEventListener("click", () => {
+    const lane = (uiLane || "").trim();
+
+    pendingSend = {
+      lane,
+      type: "loss",
+      level: "warning"
+    };
+
+    render();
+  });
+}
+
+
+// ベント 警告
+const bentWarnBtn = $("#bentWarnBtn");
+if (bentWarnBtn) {
+  bentWarnBtn.addEventListener("click", () => {
+    const lane = (uiLane || "").trim();
+
+    pendingSend = {
+      lane,
+      type: "bent",
+      level: "warning"
+    };
+
+    render();
+  });
+}
   const dsq1Btn = $("#dsq1Btn");
   if (dsq1Btn) {
     dsq1Btn.addEventListener("click", () => {
