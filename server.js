@@ -154,14 +154,13 @@ function requiredRole(op) {
     op === "SAVE_ROSTER" ||
     op === "CLEAR_ROSTER" ||
     op === "APPLY_GROUP" ||
-    op === "END_RACE" ||
     op === "GET_TOKENS" ||
     op === "REGEN_TOKEN" ||
     op === "REGEN_ALL_TOKENS"
   ) return ["host"];
 
   if (op === "CONFIRM" || op === "CANCEL") return ["recorder"];
-  if (op === "RESET") return ["chief"];
+  if (op === "END_RACE" || op === "RESET") return ["chief"];
   if (op === "NEW_CAUTION" || op === "NEW_WARNING") return ["judge"];
   if (op === "NEW_CHIEF") return ["chiefjudge"];
   return null;
