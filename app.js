@@ -1,4 +1,4 @@
-// app.js (FULL REPLACE)
+// app.js (20260920)
 
 // ===== util =====
 const $ = (sel) => document.querySelector(sel);
@@ -354,6 +354,7 @@ let roleToken = "";
 
 let raceId = "";
 let currentGroup = 1;
+let raceActive = false;
 
 let rosterByLane = {};
 let itemsAll = [];
@@ -466,6 +467,7 @@ function connect() {
     if (msg.op === "SNAPSHOT") {
       raceId = msg.raceId || "";
       currentGroup = msg.currentGroup || 1;
+      raceActive = !!msg.raceActive;
 
       rosterByLane = {};
       for (const a of (msg.roster || [])) {
@@ -497,7 +499,16 @@ function connect() {
         items = [];
         raceId = msg.raceId || "";
         currentGroup = msg.currentGroup || currentGroup;
+        raceActive = !!msg.raceActive;
         infoLine = `G${currentGroup}`;
+        render();
+        return;
+      }
+
+      if (kind === "RACE_STATE") {
+        raceActive = !!msg.raceActive;
+        currentGroup = msg.currentGroup || currentGroup;
+        infoLine = raceActive ? `G${currentGroup} 競技中` : `G${currentGroup} 終了`;
         render();
         return;
       }
@@ -569,6 +580,14 @@ if (
     }
 
     if (msg.op === "OK") {
+      if (msg.kind === "APPLY_GROUP") {
+        infoLine = `G${msg.group || currentGroup} 競技中`;
+      }
+
+      if (msg.kind === "END_RACE") {
+        infoLine = `G${msg.group || currentGroup} 終了`;
+      }
+
       if (msg.kind === "REGEN_TOKEN") {
         alert(`${msg.target} のトークンを再発行しました`);
         send({ op: "GET_TOKENS" });
@@ -1220,7 +1239,8 @@ let cautionNo = 0;
   const chiefTools = isChief ? `
     <div class="card">
       <div class="row">
-        <button id="resetBtn" class="danger">ログ初期化</button>
+        <button id="resetBtn" class="danger" ${raceActive ? "disabled" : ""}>ログ初期化</button>
+        ${raceActive ? `<span class="alert">競技中はログ初期化できません</span>` : ""}
       </div>
     </div>
   ` : "";
@@ -1469,20 +1489,33 @@ function hostView() {
     </div>
 
     <div class="card">
-      <details>
+      <details open>
         <summary class="big" style="cursor:pointer;">グループ設定</summary>
 
+        <div class="notice" style="margin-top:10px;">
+          ${
+            raceActive
+              ? `🔴 グループ${esc(currentGroup)} 競技中`
+              : `⚪ 現在、競技中のグループはありません`
+          }
+        </div>
+
         <div class="row" style="margin-top:10px;">
-          <select id="groupSelect" style="min-width:200px">
+          <select id="groupSelect" style="min-width:200px" ${raceActive ? "disabled" : ""}>
             ${[1,2,3,4,5].map(g => `
               <option value="${g}" ${g === hostSelectedGroup ? "selected" : ""}>グループ${g}</option>
             `).join("")}
           </select>
 
-          <button id="loadBtn" class="secondary">読み込み</button>
-          <button id="saveBtn">保存</button>
-          <button id="applyBtn">このグループで開始（名簿反映＋ログ初期化）</button>
-          <button id="clearBtn" class="danger">このグループ名簿を全消去</button>
+          <button id="loadBtn" class="secondary" ${raceActive ? "disabled" : ""}>読み込み</button>
+          <button id="saveBtn" ${raceActive ? "disabled" : ""}>保存</button>
+          <button id="applyBtn" ${raceActive ? "disabled" : ""}>このグループで開始（名簿反映＋ログ初期化）</button>
+          ${
+            raceActive
+              ? `<button id="endRaceBtn" class="danger">現在の競技を終了</button>`
+              : ""
+          }
+          <button id="clearBtn" class="danger" ${raceActive ? "disabled" : ""}>このグループ名簿を全消去</button>
         </div>
       </details>
     </div>
@@ -1716,6 +1749,7 @@ document.querySelectorAll("[data-cancel]").forEach((btn) => {
     const loadBtn = $("#loadBtn");
     const saveBtn = $("#saveBtn");
     const applyBtn = $("#applyBtn");
+    const endRaceBtn = $("#endRaceBtn");
     const clearBtn = $("#clearBtn");
 
     const hLane = $("#hLane");
@@ -1837,6 +1871,13 @@ document.querySelectorAll("[data-cancel]").forEach((btn) => {
 
         if (!confirm(`グループ${hostSelectedGroup} を開始します（名簿反映＋ログ初期化）。よろしいですか？`)) return;
         send({ op: "APPLY_GROUP", group: hostSelectedGroup });
+      });
+    }
+
+    if (endRaceBtn) {
+      endRaceBtn.addEventListener("click", () => {
+        if (!confirm(`グループ${currentGroup} の競技を終了します。よろしいですか？`)) return;
+        send({ op: "END_RACE" });
       });
     }
 
