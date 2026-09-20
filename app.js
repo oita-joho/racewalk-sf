@@ -1281,7 +1281,7 @@ let cautionNo = 0;
       </table>
     </div>
     `}
-
+    ${chiefTools}
     <div class="card">
       <div class="big">重要情報（警告・失格）</div>
       <table>
@@ -1299,7 +1299,7 @@ let cautionNo = 0;
       </table>
     </div>
 
-    ${chiefTools}
+
 ${isChief ? "" : `
     <div class="card">
       <div class="big">注意</div>
