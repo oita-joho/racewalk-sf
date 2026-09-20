@@ -614,8 +614,11 @@ function buildViewItems(src) {
   }
 
   if (role === "chief") {
-    out = out.filter((x) => x.status === "confirmed");
-  }
+  out = out.filter((x) =>
+    x.level === "warning" &&
+    (x.status === "pending" || x.status === "confirmed")
+  );
+}
 
   if (role === "judge" && judgeId) {
     out = out.filter((x) => x.judgeId === judgeId);
@@ -1162,16 +1165,23 @@ const action = (x.status==="pending")
       `
     : "";
 
-const action =
-  x.status === "pending"
-    ? `
-      <button data-confirm="${esc(x.id)}">確定</button>
-      ${cancelBtn}
-      `
-    : `
-      <span class="ok">確定済</span>
-      ${cancelBtn}
-      `;
+const action = isChief
+  ? (
+      x.status === "pending"
+        ? `<span class="alert">未確定</span>`
+        : `<span class="ok">確定済</span>`
+    )
+  : (
+      x.status === "pending"
+        ? `
+            <button data-confirm="${esc(x.id)}">確定</button>
+            ${cancelBtn}
+          `
+        : `
+            <span class="ok">確定済</span>
+            ${cancelBtn}
+          `
+    );
 
       return `
         <tr>
