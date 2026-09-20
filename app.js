@@ -1237,17 +1237,43 @@ let cautionNo = 0;
     }).join("");
 
   const chiefTools = isChief ? `
-    <div class="card">
-      <div class="row">
-        <button id="resetBtn" class="danger" ${raceActive ? "disabled" : ""}>ログ初期化</button>
-        ${raceActive ? `<span class="alert">競技中はログ初期化できません</span>` : ""}
-      </div>
+  <div class="card">
+    <div class="row">
+      ${
+        raceActive
+          ? `
+              <span class="alert">
+                🔴 グループ${esc(currentGroup)} 競技中
+              </span>
+              <button id="endRaceBtn" class="danger">
+                現在の競技を終了
+              </button>
+            `
+          : `
+              <span class="ok">
+                ⚪ 現在、競技中のグループはありません
+              </span>
+              <button id="resetBtn" class="danger">
+                ログ初期化
+              </button>
+            `
+      }
     </div>
-  ` : "";
+  </div>
+` : "";
 
   return shell(isChief ? "記録主任" : "記録員", `
     <div class="card">
-      <div class="big">通告</div>
+      ${isChief ? "" : `
+  <div class="card">
+    <div class="big">通告</div>
+
+    <table>
+      ...
+      <tbody>${noticeRows || ""}</tbody>
+    </table>
+  </div>
+`}
       <table>
         <thead>
           <tr>
@@ -1281,7 +1307,7 @@ let cautionNo = 0;
     </div>
 
     ${chiefTools}
-
+${isChief ? "" : `
     <div class="card">
       <div class="big">注意</div>
       <table>
@@ -1298,7 +1324,7 @@ let cautionNo = 0;
         <tbody>${bottomRows || ""}</tbody>
       </table>
     </div>
-
+`}
     <div class="card">
       <div class="big">履歴一覧</div>
       <div class="row" style="margin-top:10px">
@@ -1510,11 +1536,7 @@ function hostView() {
           <button id="loadBtn" class="secondary" ${raceActive ? "disabled" : ""}>読み込み</button>
           <button id="saveBtn" ${raceActive ? "disabled" : ""}>保存</button>
           <button id="applyBtn" ${raceActive ? "disabled" : ""}>このグループで開始（名簿反映＋ログ初期化）</button>
-          ${
-            raceActive
-              ? `<button id="endRaceBtn" class="danger">現在の競技を終了</button>`
-              : ""
-          }
+         
           <button id="clearBtn" class="danger" ${raceActive ? "disabled" : ""}>このグループ名簿を全消去</button>
         </div>
       </details>
@@ -1735,7 +1757,24 @@ document.querySelectorAll("[data-cancel]").forEach((btn) => {
 
   const printBtn = $("#printBtn");
   if (printBtn) printBtn.addEventListener("click", () => openPrint());
+　const endRaceBtn = $("#endRaceBtn");
 
+if (endRaceBtn) {
+  endRaceBtn.addEventListener("click", () => {
+
+    if (
+      !confirm(
+        `グループ${currentGroup} の競技を終了します。よろしいですか？`
+      )
+    ) {
+      return;
+    }
+
+    send({
+      op: "END_RACE"
+    });
+  });
+}
   const resetBtn = $("#resetBtn");
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
