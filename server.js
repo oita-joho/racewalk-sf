@@ -1,4 +1,4 @@
-// server.js  (FULL REPLACE)
+// server.js  (20260920)
 // Node: express + ws
 // Run: node server.js
 
@@ -154,6 +154,7 @@ function requiredRole(op) {
     op === "SAVE_ROSTER" ||
     op === "CLEAR_ROSTER" ||
     op === "APPLY_GROUP" ||
+    op === "END_RACE" ||
     op === "GET_TOKENS" ||
     op === "REGEN_TOKEN" ||
     op === "REGEN_ALL_TOKENS"
@@ -192,6 +193,7 @@ const state = {
   raceId: String(Date.now()),
   seq: 1,
   currentGroup: 1,
+  raceActive: false,
   rosterByLane: {},
   byId: {},
   activeKeyToId: {},
@@ -285,7 +287,11 @@ function snapshotFor(role, judgeId) {
   } else if (role === "judge" && judgeId) {
     items = items.filter((x) => x.judgeId === judgeId);
   } else if (role === "chief") {
-    items = items.filter((x) => x.status === "confirmed");
+    items = items.filter(
+      (x) =>
+        x.level === "warning" &&
+        (x.status === "pending" || x.status === "confirmed")
+    );
   }
 
   items.sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
@@ -294,6 +300,7 @@ function snapshotFor(role, judgeId) {
     op: "SNAPSHOT",
     raceId: state.raceId,
     currentGroup: state.currentGroup,
+    raceActive: state.raceActive,
     roster: Object.values(state.rosterByLane),
     items,
   };
@@ -428,13 +435,23 @@ wss.on("connection", (ws) => {
 
     if (op === "APPLY_GROUP") {
       const g = safeGroup(msg.group);
+
+      if (state.raceActive) {
+        return reject(
+          ws,
+          `現在グループ${state.currentGroup}が競技中です。先に現在の競技を終了してください`
+        );
+      }
+
       applyGroup(g);
+      state.raceActive = true;
 
       broadcast({
         op: "EVENT",
         kind: "RESET",
         raceId: state.raceId,
         currentGroup: state.currentGroup,
+        raceActive: state.raceActive,
       });
 
       broadcast({
@@ -443,8 +460,36 @@ wss.on("connection", (ws) => {
         roster: Object.values(state.rosterByLane),
       });
 
-      broadcast(snapshotFor("recorder", null));
+      broadcast({
+        op: "EVENT",
+        kind: "RACE_STATE",
+        raceActive: state.raceActive,
+        currentGroup: state.currentGroup,
+      });
+
       send(ws, { op: "OK", kind: "APPLY_GROUP", group: g });
+      return;
+    }
+
+    if (op === "END_RACE") {
+      if (!state.raceActive) {
+        return reject(ws, "現在、競技中のグループはありません");
+      }
+
+      state.raceActive = false;
+
+      broadcast({
+        op: "EVENT",
+        kind: "RACE_STATE",
+        raceActive: state.raceActive,
+        currentGroup: state.currentGroup,
+      });
+
+      send(ws, {
+        op: "OK",
+        kind: "END_RACE",
+        group: state.currentGroup,
+      });
       return;
     }
 
@@ -562,6 +607,13 @@ if (op === "CANCEL") {
     // Chief actions
     // -----------------------------
     if (op === "RESET") {
+      if (state.raceActive) {
+        return reject(
+          ws,
+          `グループ${state.currentGroup}が競技中のため、ログ初期化はできません`
+        );
+      }
+
       resetLogKeepRoster();
 
       broadcast({
@@ -569,8 +621,8 @@ if (op === "CANCEL") {
         kind: "RESET",
         raceId: state.raceId,
         currentGroup: state.currentGroup,
+        raceActive: state.raceActive,
       });
-      broadcast(snapshotFor("recorder", null));
       return;
     }
 
