@@ -1263,17 +1263,9 @@ let cautionNo = 0;
 ` : "";
 
   return shell(isChief ? "記録主任" : "記録員", `
+        ${isChief ? "" : `
     <div class="card">
-      ${isChief ? "" : `
-  <div class="card">
-    <div class="big">通告</div>
-
-    <table>
-      ...
-      <tbody>${noticeRows || ""}</tbody>
-    </table>
-  </div>
-`}
+      <div class="big">通告</div>
       <table>
         <thead>
           <tr>
@@ -1288,6 +1280,7 @@ let cautionNo = 0;
         <tbody>${noticeRows || ""}</tbody>
       </table>
     </div>
+    `}
 
     <div class="card">
       <div class="big">重要情報（警告・失格）</div>
@@ -1913,12 +1906,7 @@ if (endRaceBtn) {
       });
     }
 
-    if (endRaceBtn) {
-      endRaceBtn.addEventListener("click", () => {
-        if (!confirm(`グループ${currentGroup} の競技を終了します。よろしいですか？`)) return;
-        send({ op: "END_RACE" });
-      });
-    }
+
 
     if (clearBtn) {
       clearBtn.addEventListener("click", () => {
