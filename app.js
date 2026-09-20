@@ -1781,7 +1781,7 @@ if (endRaceBtn) {
     const loadBtn = $("#loadBtn");
     const saveBtn = $("#saveBtn");
     const applyBtn = $("#applyBtn");
-    const endRaceBtn = $("#endRaceBtn");
+    
     const clearBtn = $("#clearBtn");
 
     const hLane = $("#hLane");
