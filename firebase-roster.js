@@ -49,6 +49,12 @@ function ensureFirebaseBox() {
   const mount = byId("firebaseMount");
   if (!mount) return;
 
+  const isAdmin =
+    location.hash.startsWith("#/admin");
+
+  const isHost =
+    location.hash.startsWith("#/host");
+
   let box = byId("firebaseBox");
   if (box) {
     if (box.parentNode !== mount) {
@@ -61,18 +67,33 @@ function ensureFirebaseBox() {
   box = document.createElement("div");
   box.id = "firebaseBox";
   box.className = "card";
-   box.innerHTML = `
-    <div class="big">Firebase 名簿保存</div>
+  box.innerHTML = `
+    <div class="big">
+      ${isAdmin ? "Firebase 名簿管理" : "大会名簿"}
+    </div>
 
-    <div class="row">
-  <input id="fbEmail" type="email" placeholder="メールアドレス">
-  <input id="fbPassword" type="password" placeholder="パスワード">
-  <button id="fbLoginBtn" type="button">ログイン</button>
-  <button id="fbLogoutBtn" type="button">ログアウト</button>
-  <button id="fbResetPasswordBtn" type="button" class="secondary">
-    パスワードを忘れた場合
-  </button>
-</div>
+    ${isAdmin ? `
+      <div class="row">
+        <input id="fbEmail" type="email" placeholder="メールアドレス">
+        <input id="fbPassword" type="password" placeholder="パスワード">
+
+        <button id="fbLoginBtn" type="button">
+          ログイン
+        </button>
+
+        <button id="fbLogoutBtn" type="button">
+          ログアウト
+        </button>
+
+        <button
+          id="fbResetPasswordBtn"
+          type="button"
+          class="secondary"
+        >
+          パスワードを忘れた場合
+        </button>
+      </div>
+    ` : ""}
 
     <div class="row">
       <input id="fbEventId" type="text" inputmode="numeric" maxlength="10" placeholder="大会ID（10桁）">
