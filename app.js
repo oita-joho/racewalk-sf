@@ -1660,11 +1660,18 @@ function render() {
     app.innerHTML = entranceView();
 
     const hostBtn = $("#entranceHostBtn");
-    if (hostBtn) {
-      hostBtn.onclick = () => {
-        alert("次にパスコード入力画面を作成します");
+if (hostBtn) {
+  hostBtn.onclick = () => {
+    app.innerHTML = hostLoginView();
+
+    const backBtn = $("#hostLoginBackBtn");
+    if (backBtn) {
+      backBtn.onclick = () => {
+        render();
       };
     }
+  };
+}
 
     const boardBtn = $("#entranceBoardBtn");
     if (boardBtn) {
