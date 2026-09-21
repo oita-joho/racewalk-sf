@@ -177,7 +177,7 @@ ${isAdmin ? `
             ? `ログイン中: ${auth.currentUser.email || ""}`
             : "未ログイン"
         )
-      : "保存済み大会を選択してください"
+      : "保存済み大会を選択"
   }
 </div>
 
@@ -717,7 +717,7 @@ async function loadSavedEvents() {
       renderSavedEventsList();
 
       setStatus(
-        "保存済み大会を選択してください"
+        "保"
       );
 
       return;
