@@ -19,6 +19,7 @@ const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "";
 const DATA_DIR = path.join(__dirname, "data");
 const ROSTER_FILE = (g) => path.join(DATA_DIR, `roster_g${g}.json`);
 const TOKENS_FILE = path.join(DATA_DIR, "tokens.json");
+let adminToken = "";
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -388,9 +389,12 @@ app.post("/api/admin-login", (req, res) => {
       });
     }
 
-    return res.json({
-      success: true
-    });
+  adminToken = crypto.randomBytes(32).toString("hex");
+
+return res.json({
+  success: true,
+  token: adminToken
+});
 
   } catch (error) {
     console.error("ADMIN LOGIN ERROR", error);
