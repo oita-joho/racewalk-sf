@@ -926,6 +926,54 @@ location.hash = "#/admin";
     }
   }
 }
+function adminView() {
+  return `
+    <header>
+      <div class="kv">
+        <div class="big">競歩審判システム</div>
+        <span class="badge">管理者</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="card" style="max-width:700px;margin:30px auto;">
+        <div class="big">管理者画面</div>
+
+        <div class="notice" style="margin-top:15px;">
+          システム管理者専用の画面です。
+        </div>
+
+        <div style="margin-top:25px;">
+          <div style="font-weight:bold;margin-bottom:10px;">
+            設定係トークン管理
+          </div>
+
+          <p>
+            設定係が使用するトークンを管理します。
+          </p>
+
+          <button
+            id="regenHostTokenBtn"
+            type="button"
+            class="danger"
+          >
+            設定係トークンを更新
+          </button>
+        </div>
+
+        <div style="margin-top:30px;">
+          <button
+            id="adminLogoutBtn"
+            type="button"
+            class="secondary"
+          >
+            管理者を終了
+          </button>
+        </div>
+      </div>
+    </main>
+  `;
+}
 function currentHostLinksHtml() {
   const tokens = state.tokensData || {};
 
@@ -1852,6 +1900,21 @@ if (hostBtn) {
           adminLogin();
         }
       });
+    }
+
+    return;
+  }
+    // ===== 管理者画面 =====
+  if (role === "admin") {
+    app.innerHTML = adminView();
+
+    const logoutBtn = $("#adminLogoutBtn");
+
+    if (logoutBtn) {
+      logoutBtn.onclick = () => {
+        sessionStorage.removeItem("racewalkAdminToken");
+        location.hash = "#/";
+      };
     }
 
     return;
