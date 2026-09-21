@@ -790,7 +790,6 @@ function entranceView() {
 }
 
 function currentHostLinksHtml() {
-function currentHostLinksHtml() {
   const tokens = state.tokensData || {};
   return `
 <div class="nav">
