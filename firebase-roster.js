@@ -69,9 +69,19 @@ function ensureFirebaseBox() {
   box.id = "firebaseBox";
   box.className = "card";
   box.innerHTML = `
-    <div class="big">
-      ${isAdmin ? "Firebase 名簿管理" : "大会名簿"}
-    </div>
+    ${isAdmin ? `
+  <div class="big">
+    Firebase 名簿管理
+  </div>
+` : `
+  <div class="big">
+    保存済み大会一覧
+  </div>
+
+  <div class="notice" style="margin-top:8px;">
+    Firebaseに保存されている大会と名簿を読み込みます。
+  </div>
+`}
 ${isAdmin ? `
   <div class="card" style="margin-top:12px;">
     <div class="big">大会名簿CSV</div>
@@ -171,13 +181,47 @@ ${isAdmin ? `
   }
 </div>
 
-    <div class="card" style="margin-top:12px">
-      <div class="big">保存済み一覧</div>
-      <div id="fbSavedList" class="notice" style="margin-top:6px">未ログイン</div>
-      <div class="row" style="margin-top:10px">
-        <button id="fbMoreBtn" type="button" class="secondary">もっと見る</button>
-      </div>
+<div class="card" style="margin-top:12px">
+
+  ${isAdmin ? `
+    <div class="big">
+      保存済み一覧
     </div>
+  ` : ""}
+
+  <div
+    id="fbSavedList"
+    class="notice"
+    style="margin-top:6px"
+  >
+    ${
+      isAdmin
+        ? "未ログイン"
+        : "保存済み大会を読み込んでいます..."
+    }
+  </div>
+
+  <div class="row" style="margin-top:10px">
+    <button
+      id="fbMoreBtn"
+      type="button"
+      class="secondary"
+    >
+      もっと見る
+    </button>
+  </div>
+
+  ${isHost ? `
+    <div
+      class="notice"
+      style="margin-top:12px;"
+    >
+      読み込みたい大会の「読込」ボタンを押すと、
+      その大会の名簿が設定されます。
+    </div>
+  ` : ""}
+
+</div>
   `;
 
   mount.appendChild(box);
