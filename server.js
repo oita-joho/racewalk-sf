@@ -9,7 +9,40 @@ const crypto = require("crypto");
 const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
+const admin = require("firebase-admin");
 
+// =====================================================
+// Firebase Admin
+// =====================================================
+let firebaseDb = null;
+
+function getFirebaseDb() {
+  if (firebaseDb) {
+    return firebaseDb;
+  }
+
+  const raw =
+    process.env.FIREBASE_SERVICE_ACCOUNT || "";
+
+  if (!raw) {
+    throw new Error(
+      "FIREBASE_SERVICE_ACCOUNT が設定されていません"
+    );
+  }
+
+  const serviceAccount = JSON.parse(raw);
+
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential:
+        admin.credential.cert(serviceAccount)
+    });
+  }
+
+  firebaseDb = admin.firestore();
+
+  return firebaseDb;
+}
 // =====================================================
 // Config / Files
 // =====================================================
