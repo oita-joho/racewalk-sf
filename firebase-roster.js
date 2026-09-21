@@ -127,7 +127,40 @@ function bindEvents() {
       }
     };
   }
+if (resetPasswordBtn) {
+  resetPasswordBtn.onclick = async () => {
+    const email = safe(byId("fbEmail")?.value);
 
+    if (!email) {
+      setStatus("メールアドレスを入力してください");
+      return;
+    }
+
+    if (!confirm(
+      `${email} にパスワード再設定メールを送信しますか？`
+    )) {
+      return;
+    }
+
+    try {
+      setStatus("パスワード再設定メールを送信中...");
+
+      await sendPasswordResetEmail(auth, email);
+
+      setStatus(
+        "パスワード再設定メールを送信しました。メールを確認してください。"
+      );
+    } catch (e) {
+      console.error("[FB PASSWORD RESET] error", e);
+
+      setStatus(
+        "再設定メールの送信に失敗しました: " +
+        (e?.code || "") + " " +
+        (e?.message || e)
+      );
+    }
+  };
+}
   if (logoutBtn) {
     logoutBtn.onclick = async () => {
       try {
