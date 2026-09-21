@@ -557,29 +557,31 @@ wss.on("connection", (ws) => {
       return;
     }
 
-    if (op === "REGEN_ALL_TOKENS") {
-      const tokens = {
-  judge1: makeToken(),
-  judge2: makeToken(),
-  judge3: makeToken(),
-  judge4: makeToken(),
-  judge5: makeToken(),
+  if (op === "REGEN_ALL_TOKENS") {
+  const tokens = loadTokens();
 
-  chiefjudge: makeToken(),
-  recorder: makeToken(),
-  chief: makeToken(),
-};// host は含めない
-      saveTokens(tokens);
-      send(ws, {
-        op: "OK",
-        kind: "REGEN_ALL_TOKENS",
-        tokens: {
-          ...tokens,
-          host: FIXED_TOKENS.host,
-        },
-      });
-      return;
-    }
+  // 設定係(host)はそのまま保持し、
+  // その他の役割だけ更新する
+  tokens.judge1 = makeToken();
+  tokens.judge2 = makeToken();
+  tokens.judge3 = makeToken();
+  tokens.judge4 = makeToken();
+  tokens.judge5 = makeToken();
+
+  tokens.chiefjudge = makeToken();
+  tokens.recorder = makeToken();
+  tokens.chief = makeToken();
+
+  saveTokens(tokens);
+
+  send(ws, {
+    op: "OK",
+    kind: "REGEN_ALL_TOKENS",
+    tokens,
+  });
+
+  return;
+}
 
     // -----------------------------
     // Recorder actions
