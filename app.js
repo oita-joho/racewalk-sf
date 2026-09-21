@@ -1721,7 +1721,7 @@ function hostView() {
 
     <div class="card">
       <details>
-        <summary class="big" style="cursor:pointer;">レーン入力</summary>
+        <summary class="big" style="cursor:pointer;">当日の名簿変更・修正</summary>
 
         <div class="row" style="margin-top:10px;">
           <input id="hLane" placeholder="レーン" style="width:120px" value="${esc(hostForm?.lane || "")}">
