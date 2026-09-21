@@ -65,11 +65,14 @@ function ensureFirebaseBox() {
     <div class="big">Firebase 名簿保存</div>
 
     <div class="row">
-      <input id="fbEmail" type="email" placeholder="メールアドレス">
-      <input id="fbPassword" type="password" placeholder="パスワード">
-      <button id="fbLoginBtn" type="button">ログイン</button>
-      <button id="fbLogoutBtn" type="button">ログアウト</button>
-    </div>
+  <input id="fbEmail" type="email" placeholder="メールアドレス">
+  <input id="fbPassword" type="password" placeholder="パスワード">
+  <button id="fbLoginBtn" type="button">ログイン</button>
+  <button id="fbLogoutBtn" type="button">ログアウト</button>
+  <button id="fbResetPasswordBtn" type="button" class="secondary">
+    パスワードを忘れた場合
+  </button>
+</div>
 
     <div class="row">
       <input id="fbEventId" type="text" inputmode="numeric" maxlength="10" placeholder="大会ID（10桁）">
