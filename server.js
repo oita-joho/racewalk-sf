@@ -69,6 +69,7 @@ function makeToken(len = 16) {
 
 function defaultTokens() {
   return {
+    host: "rw_HOST_" + makeToken(),
     judge1: "rw_J1_7fK2mQpL8x",
     judge2: "rw_J2_B4nYt3Qa9v",
     judge3: "rw_J3_U8dLp2Zc5k",
