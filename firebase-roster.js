@@ -399,10 +399,15 @@ function init() {
       setStatus("ログイン中: " + user.email);
 
       if (typeof window.setFirebaseLoginState === "function") {
-        window.setFirebaseLoginState(true);
-      }
+  window.setFirebaseLoginState(true);
+}
 
-      await loadSavedEvents();
+// app.js の render() でFirebase欄が作り直された後に
+// ログイン状態をもう一度表示する
+ensureFirebaseBox();
+setStatus("ログイン中: " + user.email);
+
+await loadSavedEvents();
     } else {
       setStatus("未ログイン");
       savedEventsCache = [];
