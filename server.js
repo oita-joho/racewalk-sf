@@ -523,16 +523,15 @@ wss.on("connection", (ws) => {
     }
 
     if (op === "GET_TOKENS") {
-      const tokens = loadTokens();
-      send(ws, {
-        op: "TOKENS_DATA",
-        tokens: {
-          ...tokens,
-          host: FIXED_TOKENS.host,
-        },
-      });
-      return;
-    }
+  const tokens = loadTokens();
+
+  send(ws, {
+    op: "TOKENS_DATA",
+    tokens,
+  });
+
+  return;
+}
 
     if (op === "REGEN_TOKEN") {
       const target = String(msg.target || "");
