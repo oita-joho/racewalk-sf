@@ -2319,18 +2319,20 @@ function applyRoute() {
     return;
   }
   if (p === "/host") {
-    role = "host";
-    judgeId = null;
-    render();
+  role = "host";
+  judgeId = null;
+  render();
 
-    if (socket && socket.readyState === 1) {
-      hello();
-      send({ op: "LOAD_ROSTER", group: hostSelectedGroup });
-      send({ op: "GET_TOKENS" });
-    }
-
-    return;
+  if (!socket || socket.readyState === WebSocket.CLOSED) {
+    connect();
+  } else if (socket.readyState === WebSocket.OPEN) {
+    hello();
+    send({ op: "LOAD_ROSTER", group: hostSelectedGroup });
+    send({ op: "GET_TOKENS" });
   }
+
+  return;
+}
 
   if (p === "/recorder") {
     role = "recorder";
