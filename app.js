@@ -2467,19 +2467,7 @@ function applyRoute() {
 
   return;
 }
-if (p === "/admin-login") {
-  role = "admin-login";
-  judgeId = null;
-  render();
-  return;
-}
 
-if (p === "/admin") {
-  role = "admin";
-  judgeId = null;
-  render();
-  return;
-}
   if (p === "/recorder") {
     role = "recorder";
     judgeId = null;
