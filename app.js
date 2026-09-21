@@ -2282,8 +2282,12 @@ window.addEventListener("beforeunload", (e) => {
 syncServerClock();
 setInterval(syncServerClock, 60000);
 
-connect();
 applyRoute();
+
+if (role !== "entrance") {
+  connect();
+}
+
 render();
 setInterval(() => {
   fetch("/api/time").catch(() => {});
