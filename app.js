@@ -986,7 +986,16 @@ function adminView() {
             style="margin-top:15px;"
           ></div>
         </div>
+<div style="margin-top:30px;">
+  <div class="big">Firebase 名簿管理</div>
 
+  <div class="notice" style="margin-top:10px;">
+    大会前に、ここからFirebaseへ名簿を保存します。<br>
+    大会当日の設定係はFirebaseへのログインを行いません。
+  </div>
+
+  <div id="firebaseMount" style="margin-top:15px;"></div>
+</div>
         <div style="margin-top:30px;">
           <button
             id="adminLogoutBtn"
@@ -1945,7 +1954,11 @@ if (role === "admin") {
   }
 
   app.innerHTML = adminView();
-
+if (typeof window.ensureFirebaseBox === "function") {
+  requestAnimationFrame(() => {
+    window.ensureFirebaseBox();
+  });
+}
   // ------------------------------
   // 設定係トークン更新
   // ------------------------------
