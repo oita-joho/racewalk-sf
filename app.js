@@ -744,6 +744,52 @@ function chiefNoticeExistsLane(lane) {
 }
 
 // ===== views =====
+
+// ===== 入口画面 =====
+function entranceView() {
+  return `
+    <header>
+      <div class="kv">
+        <div class="big">競歩審判システム</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="card">
+        <div class="big">競歩審判システムへようこそ</div>
+
+        <div class="notice" style="margin-top:15px;">
+          使用する役割を選択してください。
+        </div>
+
+        <div style="
+          display:flex;
+          flex-direction:column;
+          gap:15px;
+          max-width:400px;
+          margin:25px auto;
+        ">
+          <button
+            id="entranceHostBtn"
+            style="font-size:20px;padding:18px;"
+          >
+            設定係
+          </button>
+
+          <button
+            id="entranceBoardBtn"
+            class="secondary"
+            style="font-size:20px;padding:18px;"
+          >
+            掲示板
+          </button>
+        </div>
+      </div>
+    </main>
+  `;
+}
+
+function currentHostLinksHtml() {
 function currentHostLinksHtml() {
   const tokens = state.tokensData || {};
   return `
