@@ -79,7 +79,7 @@ function ensureFirebaseBox() {
   </div>
 
   <div class="notice" style="margin-top:8px;">
-    保存済み大会を選択してください.
+    読み込みたい大会の「読込」ボタンを押すと、 その大会の名簿が設定されます.
   </div>
 `}
 ${isAdmin ? `
