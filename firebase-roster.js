@@ -27,6 +27,7 @@ const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 let savedEventsCache = [];
 let savedEventsVisibleCount = 5;
+let adminRosterCache = [];
 
 function byId(id) {
   return document.getElementById(id);
@@ -163,7 +164,69 @@ function bindEvents() {
   const loadBtn = byId("fbLoadBtn");
   const moreBtn = byId("fbMoreBtn");
   const eventIdEl = byId("fbEventId");
+const csvImportBtn = byId("fbCsvImportBtn");
+  if (csvImportBtn) {
+  csvImportBtn.onclick = async () => {
+    try {
+      const fileEl = byId("fbCsvFile");
+      const encEl = byId("fbCsvEnc");
+      const infoEl = byId("fbCsvInfo");
 
+      if (!fileEl?.files?.[0]) {
+        setStatus("CSVファイルを選択してください");
+        return;
+      }
+
+      const file = fileEl.files[0];
+      const enc = encEl?.value || "utf-8";
+      const buf = await file.arrayBuffer();
+
+      let text;
+
+      try {
+        text = new TextDecoder(enc).decode(buf);
+      } catch {
+        text = new TextDecoder("utf-8").decode(buf);
+      }
+
+      if (
+        typeof window.parseRosterCsvForFirebase !== "function"
+      ) {
+        setStatus("CSV変換機能が見つかりません");
+        return;
+      }
+
+      const roster =
+        window.parseRosterCsvForFirebase(text);
+
+      if (!Array.isArray(roster) || !roster.length) {
+        setStatus(
+          "有効な名簿データがありません"
+        );
+        return;
+      }
+
+      adminRosterCache = roster;
+
+      if (infoEl) {
+        infoEl.textContent =
+          `CSV読込完了：${roster.length}名`;
+      }
+
+      setStatus(
+        `CSVを読み込みました：${roster.length}名`
+      );
+
+    } catch (e) {
+      console.error("[FB CSV]", e);
+
+      setStatus(
+        "CSV読込失敗: " +
+        (e?.message || e)
+      );
+    }
+  };
+}
   if (eventIdEl) {
     eventIdEl.oninput = () => {
       eventIdEl.value = onlyDigits(eventIdEl.value);
@@ -291,14 +354,30 @@ async function saveRoster() {
     return;
   }
 
-  const roster = typeof window.getHostRoster === "function"
-    ? window.getHostRoster()
-    : [];
+  const isAdmin =
+  location.hash.startsWith("#/admin");
 
-  if (!roster.length) {
-    setStatus("保存する名簿がありません");
-    return;
-  }
+let roster = [];
+
+if (isAdmin) {
+  roster = Array.isArray(adminRosterCache)
+    ? adminRosterCache
+    : [];
+} else {
+  roster =
+    typeof window.getHostRoster === "function"
+      ? window.getHostRoster()
+      : [];
+}
+
+if (!roster.length) {
+  setStatus(
+    isAdmin
+      ? "先に大会名簿CSVを読み込んでください"
+      : "保存する名簿がありません"
+  );
+  return;
+}
 
   await setDoc(
     doc(db, "events", eventId),
