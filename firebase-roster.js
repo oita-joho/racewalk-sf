@@ -408,7 +408,7 @@ if (resetPasswordBtn) {
         if (idEl) idEl.value = eventId;
         if (noteEl) noteEl.value = note;
 
-        await loadRoster();
+        await loadRoster(eventId);
       } catch (e) {
         console.error(e);
         setStatus("読込失敗: " + (e?.message || e));
