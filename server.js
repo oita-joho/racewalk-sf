@@ -359,10 +359,12 @@ app.post("/api/host-login", (req, res) => {
     });
   }
 
-  return res.json({
-    success: true,
-    token: FIXED_TOKENS.host
-  });
+  const tokens = loadTokens();
+
+return res.json({
+  success: true,
+  token: tokens.host
+});
 });
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: "/ws" });
