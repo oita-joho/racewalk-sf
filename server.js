@@ -366,7 +366,7 @@ return res.json({
   success: true,
   token: tokens.host
 });
-}
+});
 // ========================================
 // 管理者ログイン
 // ========================================
@@ -401,7 +401,6 @@ app.post("/api/admin-login", (req, res) => {
     });
   }
 });        
-        );
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: "/ws" });
 
