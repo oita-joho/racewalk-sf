@@ -937,6 +937,7 @@ function adminView() {
 
     <main>
       <div class="card" style="max-width:700px;margin:30px auto;">
+
         <div class="big">管理者画面</div>
 
         <div class="notice" style="margin-top:15px;">
@@ -944,12 +945,13 @@ function adminView() {
         </div>
 
         <div style="margin-top:25px;">
-          <div style="font-weight:bold;margin-bottom:10px;">
+          <div class="big">
             設定係トークン管理
           </div>
 
           <p>
-            設定係が使用するトークンを管理します。
+            設定係のトークンを更新すると、
+            これまでの設定係URLは使用できなくなります。
           </p>
 
           <button
@@ -959,6 +961,11 @@ function adminView() {
           >
             設定係トークンを更新
           </button>
+
+          <div
+            id="adminMessage"
+            style="margin-top:15px;"
+          ></div>
         </div>
 
         <div style="margin-top:30px;">
@@ -970,6 +977,7 @@ function adminView() {
             管理者を終了
           </button>
         </div>
+
       </div>
     </main>
   `;
@@ -1904,21 +1912,102 @@ if (hostBtn) {
 
     return;
   }
-    // ===== 管理者画面 =====
-  if (role === "admin") {
-    app.innerHTML = adminView();
+  
+// ===== 管理者画面 =====
+if (role === "admin") {
 
-    const logoutBtn = $("#adminLogoutBtn");
+  const adminToken =
+    sessionStorage.getItem("racewalkAdminToken");
 
-    if (logoutBtn) {
-      logoutBtn.onclick = () => {
-        sessionStorage.removeItem("racewalkAdminToken");
-        location.hash = "#/";
-      };
-    }
-
+  // 管理者ログインをしていない
+  if (!adminToken) {
+    location.hash = "#/admin-login";
     return;
   }
+
+  app.innerHTML = adminView();
+
+  // ------------------------------
+  // 設定係トークン更新
+  // ------------------------------
+  const regenBtn = $("#regenHostTokenBtn");
+
+  if (regenBtn) {
+    regenBtn.onclick = async () => {
+
+      const ok = confirm(
+        "設定係トークンを更新しますか？\n\n" +
+        "現在の設定係URLは使用できなくなります。"
+      );
+
+      if (!ok) return;
+
+      try {
+        const response =
+          await fetch("/api/admin/regen-host-token", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              token: adminToken
+            })
+          });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          alert(
+            data.message ||
+            "設定係トークンの更新に失敗しました。"
+          );
+          return;
+        }
+
+        alert(
+          "設定係トークンを更新しました。\n" +
+          "古い設定係URLは使用できません。"
+        );
+
+      } catch (error) {
+        console.error(error);
+        alert("サーバーとの通信に失敗しました。");
+      }
+    };
+  }
+
+  // ------------------------------
+  // 管理者終了
+  // ------------------------------
+  const logoutBtn = $("#adminLogoutBtn");
+
+  if (logoutBtn) {
+    logoutBtn.onclick = async () => {
+
+      try {
+        await fetch("/api/admin/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            token: adminToken
+          })
+        });
+      } catch (error) {
+        console.error(error);
+      }
+
+      sessionStorage.removeItem(
+        "racewalkAdminToken"
+      );
+
+      location.hash = "#/";
+    };
+  }
+
+  return;
+}
   items = buildViewItems(itemsAll);
 
   if (p === "/host") app.innerHTML = hostView();
