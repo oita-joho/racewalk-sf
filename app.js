@@ -283,7 +283,7 @@ function buildRoleUrls() {
     { key: "chiefjudge", label: "審判主任", url: `${base}/#/chiefjudge?t=${encodeURIComponent(tokens.chiefjudge || "")}` },
     { key: "recorder", label: "記録員", url: `${base}/#/recorder?t=${encodeURIComponent(tokens.recorder || "")}` },
     { key: "chief", label: "記録主任", url: `${base}/#/chief?t=${encodeURIComponent(tokens.chief || "")}` },
-    { key: "host", label: "設定係", url: `${base}/#/host?t=${encodeURIComponent(tokens.host || "")}` },
+
     { key: "board", label: "掲示板", url: `${base}/#/board` },
   ];
 }
