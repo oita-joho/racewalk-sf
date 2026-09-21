@@ -2414,6 +2414,23 @@ function applyRoute() {
     render();
     return;
   }
+    // ===== 管理者ログイン =====
+  if (p === "/admin-login") {
+    role = "admin-login";
+    judgeId = null;
+    roleToken = "";
+    render();
+    return;
+  }
+
+  // ===== 管理者 =====
+  if (p === "/admin") {
+    role = "admin";
+    judgeId = null;
+    roleToken = "";
+    render();
+    return;
+  }
   if (p === "/host") {
   role = "host";
   judgeId = null;
