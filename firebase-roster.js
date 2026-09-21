@@ -79,7 +79,7 @@ function ensureFirebaseBox() {
   </div>
 
   <div class="notice" style="margin-top:8px;">
-    Firebaseに保存されている大会と名簿を読み込みます。
+    保存済み大会を選択してください.
   </div>
 `}
 ${isAdmin ? `
