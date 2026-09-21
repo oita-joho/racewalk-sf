@@ -404,7 +404,57 @@ return res.json({
       message: "管理者ログインに失敗しました。"
     });
   }
-});        
+});   
+// ========================================
+// 管理者：設定係トークン更新
+// ========================================
+app.post("/api/admin/regen-host-token", (req, res) => {
+  try {
+    const token = String(req.body?.token || "");
+
+    // 管理者としてログインしていない
+    if (!adminToken || token !== adminToken) {
+      return res.status(401).json({
+        success: false,
+        message: "管理者の認証が必要です。"
+      });
+    }
+
+    const tokens = loadTokens();
+
+    // 設定係トークンを新しくする
+    tokens.host = "rw_HOST_" + makeToken();
+
+    saveTokens(tokens);
+
+    return res.json({
+      success: true,
+      message: "設定係トークンを更新しました。"
+    });
+
+  } catch (error) {
+    console.error("REGEN HOST TOKEN ERROR", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "設定係トークンの更新に失敗しました。"
+    });
+  }
+});
+// ========================================
+// 管理者ログアウト
+// ========================================
+app.post("/api/admin/logout", (req, res) => {
+  const token = String(req.body?.token || "");
+
+  if (adminToken && token === adminToken) {
+    adminToken = "";
+  }
+
+  return res.json({
+    success: true
+  });
+});
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: "/ws" });
 
