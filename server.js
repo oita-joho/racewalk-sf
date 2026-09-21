@@ -132,11 +132,11 @@ function tokenOkFor(role, judgeId, token) {
   const t = String(token || "").trim();
   if (!t) return false;
 
-  if (role === "host") {
-    return FIXED_TOKENS.host === t;
-  }
+const tokens = loadTokens();
 
-  const tokens = loadTokens();
+if (role === "host") {
+  return tokens.host === t;
+}
 
   if (role === "judge") {
     const key = judgeIdToRole(judgeId);
