@@ -336,7 +336,33 @@ app.get("/api/time", (req, res) => {
     ts: now.getTime(),
   });
 });
+// =====================================================
+// 設定係 パスコード認証
+// =====================================================
+app.use(express.json());
 
+app.post("/api/host-login", (req, res) => {
+  const passcode = String(req.body?.passcode || "");
+
+  if (!HOST_PASSCODE) {
+    return res.status(500).json({
+      success: false,
+      message: "設定係パスコードがサーバーに設定されていません"
+    });
+  }
+
+  if (passcode !== HOST_PASSCODE) {
+    return res.status(401).json({
+      success: false,
+      message: "パスコードが違います"
+    });
+  }
+
+  return res.json({
+    success: true,
+    token: FIXED_TOKENS.host
+  });
+});
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: "/ws" });
 
