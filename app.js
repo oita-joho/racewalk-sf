@@ -1717,35 +1717,7 @@ function hostView() {
         必要な項目だけ開いて使ってください。<br>
         手順0.事前にCSVを読み込む 1.fireに保存 2.当日fireから読み込みグループに保存 3.実施する
       </div>
-      <div class="card">
-  <div class="notice">
-    ここで名簿管理の機能を切り替えできます。
-  </div>
 
-  <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap;">
-    <button
-      id="toggleFirebaseBtn"
-      class="${firebaseEnabled ? "" : "danger"}"
-      type="button"
-    >
-      Firebase：${firebaseEnabled ? "ON" : "OFF"}
-      ${firebaseLoggedIn ? "（ログイン済）" : ""}
-    </button>
-
-    <button
-      id="toggleCsvBtn"
-      class="${csvEnabled ? "" : "danger"}"
-      type="button"
-    >
-      CSV：${csvEnabled ? "ON" : "OFF"}
-    </button>
-  </div>
-</div>
-    </div>
-
-    ${csvEnabled ? `
-
-    ` : ""}
 
     <div class="card">
       <details>
