@@ -102,6 +102,7 @@ function ensureFirebaseBox() {
 function bindEvents() {
   const loginBtn = byId("fbLoginBtn");
   const logoutBtn = byId("fbLogoutBtn");
+  const resetPasswordBtn = byId("fbResetPasswordBtn");
   const saveBtn = byId("fbSaveBtn");
   const loadBtn = byId("fbLoadBtn");
   const moreBtn = byId("fbMoreBtn");
