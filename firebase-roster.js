@@ -381,7 +381,7 @@ if (resetPasswordBtn) {
   if (loadBtn) {
     loadBtn.onclick = async () => {
       try {
-        await loadRoster();
+                await loadRoster(eventId);
       } catch (e) {
         console.error(e);
         setStatus("読込失敗: " + (e?.message || e));
@@ -417,9 +417,12 @@ if (resetPasswordBtn) {
   });
 }
 
-async function saveRoster() {
-  const eventId = onlyDigits(byId("fbEventId")?.value);
-  const note = safe(byId("fbNote")?.value);
+async function loadRoster(eventIdArg = "") {
+  const eventId =
+    onlyDigits(
+      eventIdArg ||
+      byId("fbEventId")?.value
+    );
 
   if (!/^\d{10}$/.test(eventId)) {
     setStatus("大会IDは10桁で入力してください");
@@ -738,18 +741,7 @@ async function loadSavedEvents() {
   // 管理者
   // 従来どおりFirebase Authを使用
   // ========================================
- const isHost =
-  location.hash.startsWith("#/host");
 
-if (!isHost && !auth.currentUser) {
-  el.innerHTML = "未ログイン";
-
-  if (moreBtn) {
-    moreBtn.style.display = "none";
-  }
-
-  return;
-}
 
   const snap =
     await getDocs(
@@ -787,11 +779,21 @@ if (!isHost && !auth.currentUser) {
 function renderSavedEventsList() {
   const el = byId("fbSavedList");
   const moreBtn = byId("fbMoreBtn");
+
   if (!el) return;
 
-  if (!auth.currentUser) {
+  const isHost =
+    location.hash.startsWith("#/host");
+
+  // 管理者だけFirebaseログインが必要
+  // 設定係はRenderサーバー経由なのでログイン不要
+  if (!isHost && !auth.currentUser) {
     el.innerHTML = "未ログイン";
-    if (moreBtn) moreBtn.style.display = "none";
+
+    if (moreBtn) {
+      moreBtn.style.display = "none";
+    }
+
     return;
   }
 
