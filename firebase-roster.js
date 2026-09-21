@@ -129,18 +129,46 @@ ${isAdmin ? `
       </div>
     ` : ""}
 
-    <div class="row">
-      <input id="fbEventId" type="text" inputmode="numeric" maxlength="10" placeholder="大会ID（10桁）">
-      <input id="fbNote" type="text" maxlength="100" placeholder="備考（例：春季大会・男子）" style="min-width:260px;flex:1">
-    </div>
+${isAdmin ? `
+  <div class="row">
+    <input
+      id="fbEventId"
+      type="text"
+      inputmode="numeric"
+      maxlength="10"
+      placeholder="大会ID（10桁）"
+    >
 
-    <div class="row">
-      <button id="fbSaveBtn" type="button">現在の名簿をFirebase保存</button>
-      <button id="fbLoadBtn" type="button">Firebaseから読込</button>
-    </div>
+    <input
+      id="fbNote"
+      type="text"
+      maxlength="100"
+      placeholder="備考（例：春季大会・男子）"
+      style="min-width:260px;flex:1"
+    >
+  </div>
 
-    <div id="fbStatus">
-  ${auth.currentUser ? `ログイン中: ${auth.currentUser.email || ""}` : "未ログイン"}
+  <div class="row">
+    <button id="fbSaveBtn" type="button">
+      現在の名簿をFirebase保存
+    </button>
+
+    <button id="fbLoadBtn" type="button">
+      Firebaseから読込
+    </button>
+  </div>
+` : ""}
+
+<div id="fbStatus">
+  ${
+    isAdmin
+      ? (
+          auth.currentUser
+            ? `ログイン中: ${auth.currentUser.email || ""}`
+            : "未ログイン"
+        )
+      : "保存済み大会を選択してください"
+  }
 </div>
 
     <div class="card" style="margin-top:12px">
@@ -408,57 +436,306 @@ if (!roster.length) {
 }
 
 async function loadRoster() {
-  const eventId = onlyDigits(byId("fbEventId")?.value);
+  const eventId =
+    onlyDigits(byId("fbEventId")?.value);
+
   if (!/^\d{10}$/.test(eventId)) {
-    setStatus("大会IDは10桁で入力してください");
+    setStatus(
+      "大会IDは10桁で入力してください"
+    );
     return;
   }
 
-  const eventSnap = await getDoc(doc(db, "events", eventId));
+  const isHost =
+    location.hash.startsWith("#/host");
+
+  // ========================================
+  // 設定係
+  // Renderサーバー経由でFirebaseから取得
+  // ========================================
+  if (isHost) {
+    try {
+      const params =
+        new URLSearchParams(
+          location.hash.split("?")[1] || ""
+        );
+
+      const token =
+        params.get("t") || "";
+
+      if (!token) {
+        setStatus(
+          "設定係トークンが見つかりません"
+        );
+        return;
+      }
+
+      setStatus("名簿を読み込んでいます...");
+
+      const response =
+        await fetch(
+          "/api/host/firebase-roster",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+            body: JSON.stringify({
+              token,
+              eventId
+            })
+          }
+        );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message ||
+          "名簿を取得できませんでした"
+        );
+      }
+
+      const roster =
+        Array.isArray(data.roster)
+          ? data.roster
+          : [];
+
+      if (!roster.length) {
+        setStatus(
+          `名簿がありません: ${eventId}`
+        );
+        return;
+      }
+
+      if (
+        typeof window.setHostRoster ===
+        "function"
+      ) {
+        window.setHostRoster(roster);
+      }
+
+      setStatus(
+        `読込しました: ${eventId} / ${roster.length}件`
+      );
+
+      return;
+
+    } catch (e) {
+      console.error(
+        "[HOST FIREBASE ROSTER]",
+        e
+      );
+
+      setStatus(
+        "読込失敗: " +
+        (e?.message || e)
+      );
+
+      return;
+    }
+  }
+
+  // ========================================
+  // 管理者
+  // 従来どおりFirebaseから直接取得
+  // ========================================
+  const eventSnap =
+    await getDoc(
+      doc(db, "events", eventId)
+    );
+
   if (!eventSnap.exists()) {
-    setStatus(`大会IDが見つかりません: ${eventId}`);
+    setStatus(
+      `大会IDが見つかりません: ${eventId}`
+    );
     return;
   }
 
-  const eventData = eventSnap.data() || {};
-  const noteEl = byId("fbNote");
-  if (noteEl) noteEl.value = safe(eventData.note);
+  const eventData =
+    eventSnap.data() || {};
 
-  const snap = await getDocs(collection(db, "events", eventId, "roster"));
-  const roster = snap.docs
-    .map(d => d.data())
-    .sort((a, b) => (parseInt(a.lane, 10) || 0) - (parseInt(b.lane, 10) || 0));
+  const noteEl = byId("fbNote");
+
+  if (noteEl) {
+    noteEl.value =
+      safe(eventData.note);
+  }
+
+  const snap =
+    await getDocs(
+      collection(
+        db,
+        "events",
+        eventId,
+        "roster"
+      )
+    );
+
+  const roster =
+    snap.docs
+      .map(d => d.data())
+      .sort(
+        (a, b) =>
+          (parseInt(a.lane, 10) || 0) -
+          (parseInt(b.lane, 10) || 0)
+      );
 
   if (!roster.length) {
-    setStatus(`名簿がありません: ${eventId}`);
+    setStatus(
+      `名簿がありません: ${eventId}`
+    );
     return;
   }
 
-  if (typeof window.setHostRoster === "function") {
+  if (
+    typeof window.setHostRoster ===
+    "function"
+  ) {
     window.setHostRoster(roster);
   }
 
-  setStatus(`読込しました: ${eventId} / ${roster.length}件`);
+  setStatus(
+    `読込しました: ${eventId} / ${roster.length}件`
+  );
 }
 
 async function loadSavedEvents() {
-  if (!auth.currentUser) {
-    savedEventsCache = [];
-    renderSavedEventsList();
-    return;
+  const isHost =
+    location.hash.startsWith("#/host");
+
+  // ========================================
+  // 設定係
+  // Render経由で大会一覧を取得
+  // ========================================
+  if (isHost) {
+    try {
+      const params =
+        new URLSearchParams(
+          location.hash.split("?")[1] || ""
+        );
+
+      const token =
+        params.get("t") || "";
+
+      if (!token) {
+        savedEventsCache = [];
+        renderSavedEventsList();
+        return;
+      }
+
+      setStatus(
+        "保存済み大会を読み込んでいます..."
+      );
+
+      const response =
+        await fetch(
+          "/api/host/firebase-events",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+            body: JSON.stringify({
+              token
+            })
+          }
+        );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message ||
+          "大会一覧を取得できませんでした"
+        );
+      }
+
+      savedEventsCache =
+        Array.isArray(data.events)
+          ? data.events
+          : [];
+
+      savedEventsCache.sort(
+        (a, b) =>
+          Number(b.updatedAt || 0) -
+          Number(a.updatedAt || 0)
+      );
+
+      renderSavedEventsList();
+
+      setStatus(
+        "保存済み大会を選択してください"
+      );
+
+      return;
+
+    } catch (e) {
+      console.error(
+        "[HOST FIREBASE EVENTS]",
+        e
+      );
+
+      savedEventsCache = [];
+      renderSavedEventsList();
+
+      setStatus(
+        "大会一覧の取得に失敗しました: " +
+        (e?.message || e)
+      );
+
+      return;
+    }
   }
 
-  const snap = await getDocs(collection(db, "events"));
-  savedEventsCache = snap.docs
-    .map(d => {
-      const data = d.data() || {};
-      return {
-        eventId: safe(data.eventId || d.id),
-        note: safe(data.note),
-        updatedAt: Number(data.updatedAt || 0)
-      };
-    })
-    .sort((a, b) => b.updatedAt - a.updatedAt);
+  // ========================================
+  // 管理者
+  // 従来どおりFirebase Authを使用
+  // ========================================
+ const isHost =
+  location.hash.startsWith("#/host");
+
+if (!isHost && !auth.currentUser) {
+  el.innerHTML = "未ログイン";
+
+  if (moreBtn) {
+    moreBtn.style.display = "none";
+  }
+
+  return;
+}
+
+  const snap =
+    await getDocs(
+      collection(db, "events")
+    );
+
+  savedEventsCache =
+    snap.docs
+      .map(d => {
+        const data = d.data() || {};
+
+        return {
+          eventId:
+            safe(
+              data.eventId || d.id
+            ),
+
+          note:
+            safe(data.note),
+
+          updatedAt:
+            Number(
+              data.updatedAt || 0
+            )
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.updatedAt - a.updatedAt
+      );
 
   renderSavedEventsList();
 }
@@ -566,13 +843,31 @@ await loadSavedEvents();
     });
   }
 
-  window.addEventListener("hashchange", () => {
+  window.addEventListener(
+  "hashchange",
+  async () => {
     scheduleEnsureFirebaseBox();
-  });
 
-  window.addEventListener("load", () => {
+    if (
+      location.hash.startsWith("#/host")
+    ) {
+      await loadSavedEvents();
+    }
+  }
+);
+
+window.addEventListener(
+  "load",
+  async () => {
     scheduleEnsureFirebaseBox();
-  });
+
+    if (
+      location.hash.startsWith("#/host")
+    ) {
+      await loadSavedEvents();
+    }
+  }
+);
 }
 window.ensureFirebaseBox = ensureFirebaseBox;
 init();
