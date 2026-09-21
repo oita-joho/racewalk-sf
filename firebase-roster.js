@@ -211,15 +211,7 @@ ${isAdmin ? `
     </button>
   </div>
 
-  ${isHost ? `
-    <div
-      class="notice"
-      style="margin-top:12px;"
-    >
-      読み込みたい大会の「読込」ボタンを押すと、
-      その大会の名簿が設定されます。
-    </div>
-  ` : ""}
+ 
 
 </div>
   `;
