@@ -775,14 +775,14 @@ function entranceView() {
           >
             設定係
           </button>
-
-          <button
-            id="entranceBoardBtn"
-            class="secondary"
-            style="font-size:20px;padding:18px;"
-          >
-            掲示板
-          </button>
+<button
+  type="button"
+  class="secondary"
+  onclick="location.hash='#/admin-login'"
+>
+  管理者
+</button>
+          
         </div>
       </div>
     </main>
@@ -834,6 +834,96 @@ function hostLoginView() {
       </div>
     </main>
   `;
+}
+function adminLoginView() {
+  return `
+    <div class="card" style="max-width:520px;margin:40px auto;">
+      <h2>管理者ログイン</h2>
+
+      <p class="small">
+        管理者パスコードを入力してください。
+      </p>
+
+      <input
+        id="adminPasscode"
+        type="password"
+        placeholder="管理者パスコード"
+        autocomplete="current-password"
+        style="width:100%;box-sizing:border-box;"
+      >
+
+      <div style="margin-top:16px;">
+        <button id="adminLoginBtn" type="button">
+          ログイン
+        </button>
+
+        <button
+          type="button"
+          class="secondary"
+          onclick="location.hash='#/'"
+        >
+          戻る
+        </button>
+      </div>
+
+      <div
+        id="adminLoginMessage"
+        class="small"
+        style="margin-top:12px;"
+      ></div>
+    </div>
+  `;
+}
+async function adminLogin() {
+  const input =
+    document.getElementById("adminPasscode");
+
+  const message =
+    document.getElementById("adminLoginMessage");
+
+  const passcode =
+    String(input?.value || "").trim();
+
+  if (!passcode) {
+    if (message) {
+      message.textContent =
+        "管理者パスコードを入力してください。";
+    }
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/admin-login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        passcode
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      if (message) {
+        message.textContent =
+          data.message ||
+          "管理者ログインに失敗しました。";
+      }
+      return;
+    }
+
+    location.hash = "#/admin";
+
+  } catch (error) {
+    console.error(error);
+
+    if (message) {
+      message.textContent =
+        "サーバーとの通信に失敗しました。";
+    }
+  }
 }
 function currentHostLinksHtml() {
   const tokens = state.tokensData || {};
@@ -2339,7 +2429,19 @@ function applyRoute() {
 
   return;
 }
+if (p === "/admin-login") {
+  role = "admin-login";
+  judgeId = null;
+  render();
+  return;
+}
 
+if (p === "/admin") {
+  role = "admin";
+  judgeId = null;
+  render();
+  return;
+}
   if (p === "/recorder") {
     role = "recorder";
     judgeId = null;
