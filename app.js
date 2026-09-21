@@ -914,7 +914,8 @@ async function adminLogin() {
       return;
     }
 
-    location.hash = "#/admin";
+    sessionStorage.setItem("racewalkAdminToken", data.token);
+location.hash = "#/admin";
 
   } catch (error) {
     console.error(error);
