@@ -1744,25 +1744,7 @@ function hostView() {
     </div>
 
     ${csvEnabled ? `
-      <div class="card">
-        <details open>
-          <summary class="big" style="cursor:pointer;">CSVから名簿を読み込み</summary>
 
-          <div class="notice" style="margin-top:10px;">
-            形式：lane,bib,name,team（1行目ヘッダ可）／レーンは半角数字のみ。<br>
-            Excelで保存する場合は「CSV UTF-8（コンマ区切り）」推奨。
-          </div>
-
-          <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap;">
-            <input id="csvFile" type="file" accept=".csv,text/csv">
-            <select id="csvEnc">
-              <option value="utf-8" selected>UTF-8</option>
-              <option value="shift_jis">Shift-JIS</option>
-            </select>
-            <button id="csvImportBtn" class="success">読み込み（反映）</button>
-          </div>
-        </details>
-      </div>
     ` : ""}
 
     <div class="card">
