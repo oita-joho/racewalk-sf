@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebas
 import {
   getAuth,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
