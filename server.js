@@ -15,6 +15,7 @@ const WebSocket = require("ws");
 // =====================================================
 const PORT = process.env.PORT || 8080;
 const HOST_PASSCODE = process.env.HOST_PASSCODE || "";
+const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "";
 const DATA_DIR = path.join(__dirname, "data");
 const ROSTER_FILE = (g) => path.join(DATA_DIR, `roster_g${g}.json`);
 const TOKENS_FILE = path.join(DATA_DIR, "tokens.json");
@@ -365,7 +366,42 @@ return res.json({
   success: true,
   token: tokens.host
 });
-});
+}
+// ========================================
+// 管理者ログイン
+// ========================================
+app.post("/api/admin-login", (req, res) => {
+  try {
+    const passcode = String(req.body?.passcode || "");
+
+    if (!ADMIN_PASSCODE) {
+      return res.status(500).json({
+        success: false,
+        message: "管理者パスコードが設定されていません。"
+      });
+    }
+
+    if (passcode !== ADMIN_PASSCODE) {
+      return res.status(401).json({
+        success: false,
+        message: "管理者パスコードが違います。"
+      });
+    }
+
+    return res.json({
+      success: true
+    });
+
+  } catch (error) {
+    console.error("ADMIN LOGIN ERROR", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "管理者ログインに失敗しました。"
+    });
+  }
+});        
+        );
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: "/ws" });
 
