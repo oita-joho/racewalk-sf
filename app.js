@@ -603,11 +603,30 @@ if (
   };
 
   socket.onclose = () => {
-    connectionState = "closed";
-    infoLine = "切断…再接続します";
-    render();
-    setTimeout(connect, 1200);
-  };
+  connectionState = "closed";
+
+  // 管理者・入口ではWebSocketを使用しない
+  if (
+    role === "entrance" ||
+    role === "admin-login" ||
+    role === "admin"
+  ) {
+    return;
+  }
+
+  infoLine = "切断…再接続します";
+  render();
+
+  setTimeout(() => {
+    if (
+      role !== "entrance" &&
+      role !== "admin-login" &&
+      role !== "admin"
+    ) {
+      connect();
+    }
+  }, 1200);
+};
 
   socket.onerror = () => {};
 }
@@ -2674,21 +2693,22 @@ window.addEventListener("beforeunload", (e) => {
   }
 });
 
-// init
+// ===== init =====
 syncServerClock();
 setInterval(syncServerClock, 60000);
 
+// URLから役割を決定して画面を表示
 applyRoute();
 
+// WebSocketが必要な役割だけ接続
 if (
   role !== "entrance" &&
   role !== "admin-login" &&
-  role !== "admin"
+  role !== "admin" &&
+  role !== "host"
 ) {
   connect();
 }
-
-render();
 setInterval(() => {
   fetch("/api/time").catch(() => {});
 }, 5 * 60 * 1000);
