@@ -1833,7 +1833,28 @@ if (hostBtn) {
     return;
   }
   const p = routePath();
+  // ===== 管理者ログイン画面 =====
+  if (role === "admin-login") {
+    app.innerHTML = adminLoginView();
 
+    const loginBtn = $("#adminLoginBtn");
+
+    if (loginBtn) {
+      loginBtn.onclick = adminLogin;
+    }
+
+    const passInput = $("#adminPasscode");
+
+    if (passInput) {
+      passInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          adminLogin();
+        }
+      });
+    }
+
+    return;
+  }
   items = buildViewItems(itemsAll);
 
   if (p === "/host") app.innerHTML = hostView();
