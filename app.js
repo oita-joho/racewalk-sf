@@ -1778,7 +1778,7 @@ function hostView() {
         </div>
       </details>
     </div>
-
+    <div id="firebaseMount"></div>
     <div class="card">
       <details open>
         <summary class="big" style="cursor:pointer;">グループ設定</summary>
@@ -1807,9 +1807,7 @@ function hostView() {
       </details>
     </div>
 
-    <div id="firebaseMount"></div>
-
-    <div class="card">
+        <div class="card">
       <details>
         <summary class="big" style="cursor:pointer;">編集名簿（${list.length}名）</summary>
 
