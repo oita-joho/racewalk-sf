@@ -788,7 +788,53 @@ function entranceView() {
     </main>
   `;
 }
+// ===== 設定係パスコード画面 =====
+function hostLoginView() {
+  return `
+    <header>
+      <div class="kv">
+        <div class="big">競歩審判システム</div>
+      </div>
+    </header>
 
+    <main>
+      <div class="card" style="max-width:500px;margin:30px auto;">
+        <div class="big">設定係ログイン</div>
+
+        <div class="notice" style="margin-top:15px;">
+          設定係用のパスコードを入力してください。
+        </div>
+
+        <div style="margin-top:20px;">
+          <input
+            id="hostPasscode"
+            type="password"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="パスコード"
+            style="
+              width:100%;
+              box-sizing:border-box;
+              font-size:24px;
+              padding:15px;
+              text-align:center;
+            "
+          >
+        </div>
+
+        <div class="row" style="margin-top:20px;">
+          <button id="hostLoginBtn" style="font-size:18px;">
+            ログイン
+          </button>
+
+          <button id="hostLoginBackBtn" class="secondary">
+            戻る
+          </button>
+        </div>
+      </div>
+    </main>
+  `;
+}
 function currentHostLinksHtml() {
   const tokens = state.tokensData || {};
   return `
