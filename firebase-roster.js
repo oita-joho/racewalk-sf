@@ -71,7 +71,40 @@ function ensureFirebaseBox() {
     <div class="big">
       ${isAdmin ? "Firebase 名簿管理" : "大会名簿"}
     </div>
+${isAdmin ? `
+  <div class="card" style="margin-top:12px;">
+    <div class="big">大会名簿CSV</div>
 
+    <div class="row" style="margin-top:10px;">
+      <input
+        id="fbCsvFile"
+        type="file"
+        accept=".csv,text/csv"
+      >
+
+      <select id="fbCsvEnc">
+        <option value="utf-8">UTF-8</option>
+        <option value="shift_jis">Shift_JIS</option>
+      </select>
+
+      <button
+        id="fbCsvImportBtn"
+        type="button"
+        class="secondary"
+      >
+        CSVを読み込む
+      </button>
+    </div>
+
+    <div
+      id="fbCsvInfo"
+      class="notice"
+      style="margin-top:10px;"
+    >
+      CSVはまだ読み込まれていません。
+    </div>
+  </div>
+` : ""}
     ${isAdmin ? `
       <div class="row">
         <input id="fbEmail" type="email" placeholder="メールアドレス">
