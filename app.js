@@ -1660,11 +1660,65 @@ function render() {
     app.innerHTML = entranceView();
 
     const hostBtn = $("#entranceHostBtn");
+
 if (hostBtn) {
   hostBtn.onclick = () => {
+
     app.innerHTML = hostLoginView();
 
+    const loginBtn = $("#hostLoginBtn");
+    const passInput = $("#hostPasscode");
     const backBtn = $("#hostLoginBackBtn");
+
+    // ===== ログイン =====
+    if (loginBtn && passInput) {
+      loginBtn.onclick = async () => {
+
+        const passcode = passInput.value.trim();
+
+        if (!passcode) {
+          alert("パスコードを入力してください");
+          return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = "確認中...";
+
+        try {
+          const res = await fetch("/api/host-login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              passcode: passcode
+            })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            alert(data.message || "ログインできませんでした");
+            loginBtn.disabled = false;
+            loginBtn.textContent = "ログイン";
+            return;
+          }
+
+          // 認証成功
+          location.hash =
+            "#/host?t=" + encodeURIComponent(data.token);
+
+        } catch (err) {
+          console.error(err);
+          alert("サーバーとの通信に失敗しました");
+
+          loginBtn.disabled = false;
+          loginBtn.textContent = "ログイン";
+        }
+      };
+    }
+
+    // ===== 戻る =====
     if (backBtn) {
       backBtn.onclick = () => {
         render();
