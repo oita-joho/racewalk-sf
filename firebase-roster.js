@@ -84,7 +84,9 @@ function ensureFirebaseBox() {
       <button id="fbLoadBtn" type="button">Firebaseから読込</button>
     </div>
 
-    <div id="fbStatus">未ログイン</div>
+    <div id="fbStatus">
+  ${auth.currentUser ? `ログイン中: ${auth.currentUser.email || ""}` : "未ログイン"}
+</div>
 
     <div class="card" style="margin-top:12px">
       <div class="big">保存済み一覧</div>
