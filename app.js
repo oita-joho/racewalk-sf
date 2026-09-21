@@ -1610,6 +1610,26 @@ function hostView() {
 }
 // ===== render =====
 function render() {
+    // ===== 入口画面 =====
+  if (role === "entrance") {
+    app.innerHTML = entranceView();
+
+    const hostBtn = $("#entranceHostBtn");
+    if (hostBtn) {
+      hostBtn.onclick = () => {
+        alert("次にパスコード入力画面を作成します");
+      };
+    }
+
+    const boardBtn = $("#entranceBoardBtn");
+    if (boardBtn) {
+      boardBtn.onclick = () => {
+        location.hash = "#/board";
+      };
+    }
+
+    return;
+  }
   const p = routePath();
 
   items = buildViewItems(itemsAll);
@@ -2184,7 +2204,14 @@ function applyRoute() {
   const p = routePath();
   const q = qs();
   roleToken = q.get("t") || "";
-
+  // ===== 入口 =====
+  if (p === "/") {
+    role = "entrance";
+    judgeId = null;
+    roleToken = "";
+    render();
+    return;
+  }
   if (p === "/host") {
     role = "host";
     judgeId = null;
