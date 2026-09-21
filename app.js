@@ -1807,7 +1807,7 @@ function hostView() {
       </details>
     </div>
 
-    ${firebaseEnabled ? `<div id="firebaseMount"></div>` : ""}
+    <div id="firebaseMount"></div>
 
     <div class="card">
       <details>
