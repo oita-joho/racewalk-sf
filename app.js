@@ -2732,6 +2732,11 @@ window.setFirebaseLoginState = function (loggedIn) {
   }
   render();
 };
+// ===== Firebase管理者用 CSV変換 =====
+window.parseRosterCsvForFirebase = function (text) {
+  const rows = parseCsv(text);
+  return csvRowsToRoster(rows);
+};
 window.getHostRoster = function () {
   return Array.isArray(hostRosterCache) ? hostRosterCache.slice() : [];
 };
