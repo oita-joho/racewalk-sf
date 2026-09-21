@@ -169,17 +169,13 @@ ${isAdmin ? `
   </div>
 ` : ""}
 
-<div id="fbStatus">
-  ${
-    isAdmin
-      ? (
-          auth.currentUser
-            ? `ログイン中: ${auth.currentUser.email || ""}`
-            : "未ログイン"
-        )
-      : "保存済み大会を選択"
-  }
-</div>
+${isAdmin ? `
+  <div id="fbStatus">
+    ${auth.currentUser ? `ログイン中: ${auth.currentUser.email || ""}` : "未ログイン"}
+  </div>
+` : `
+  <div id="fbStatus" style="display:none;"></div>
+`}
 
 <div class="card" style="margin-top:12px">
 
