@@ -417,12 +417,12 @@ if (resetPasswordBtn) {
   });
 }
 
-async function loadRoster(eventIdArg = "") {
+async function saveRoster() {
   const eventId =
-    onlyDigits(
-      eventIdArg ||
-      byId("fbEventId")?.value
-    );
+    onlyDigits(byId("fbEventId")?.value);
+
+  const note =
+    safe(byId("fbNote")?.value);
 
   if (!/^\d{10}$/.test(eventId)) {
     setStatus("大会IDは10桁で入力してください");
@@ -482,9 +482,12 @@ if (!roster.length) {
   await loadSavedEvents();
 }
 
-async function loadRoster() {
+async function loadRoster(eventIdArg = "") {
   const eventId =
-    onlyDigits(byId("fbEventId")?.value);
+    onlyDigits(
+      eventIdArg ||
+      byId("fbEventId")?.value
+    );
 
   if (!/^\d{10}$/.test(eventId)) {
     setStatus(
