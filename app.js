@@ -2528,7 +2528,11 @@ setInterval(syncServerClock, 60000);
 
 applyRoute();
 
-if (role !== "entrance") {
+if (
+  role !== "entrance" &&
+  role !== "admin-login" &&
+  role !== "admin"
+) {
   connect();
 }
 
