@@ -401,6 +401,165 @@ return res.json({
   token: tokens.host
 });
 });
+// =====================================================
+// 設定係：Firebase 保存済み大会一覧
+// =====================================================
+app.post("/api/host/firebase-events", async (req, res) => {
+  try {
+    const token = String(req.body?.token || "");
+
+    const tokens = loadTokens();
+
+    if (!token || token !== String(tokens.host || "")) {
+      return res.status(401).json({
+        success: false,
+        message: "設定係の認証に失敗しました"
+      });
+    }
+
+    const db = getFirebaseDb();
+
+    const snap =
+      await db.collection("events").get();
+
+    const events = [];
+
+    snap.forEach((doc) => {
+      const data = doc.data() || {};
+
+      events.push({
+        eventId:
+          String(data.eventId || doc.id || ""),
+        note:
+          String(data.note || ""),
+        updatedAt:
+          data.updatedAt || ""
+      });
+    });
+
+    events.sort((a, b) =>
+      String(b.updatedAt || "")
+        .localeCompare(String(a.updatedAt || ""))
+    );
+
+    return res.json({
+      success: true,
+      events
+    });
+
+  } catch (error) {
+    console.error(
+      "FIREBASE EVENTS ERROR",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Firebaseの大会一覧を取得できませんでした"
+    });
+  }
+});
+
+
+// =====================================================
+// 設定係：Firebase 大会名簿取得
+// =====================================================
+app.post("/api/host/firebase-roster", async (req, res) => {
+  try {
+    const token =
+      String(req.body?.token || "");
+
+    const eventId =
+      String(req.body?.eventId || "").trim();
+
+    const tokens = loadTokens();
+
+    if (!token || token !== String(tokens.host || "")) {
+      return res.status(401).json({
+        success: false,
+        message: "設定係の認証に失敗しました"
+      });
+    }
+
+    if (!/^\d{10}$/.test(eventId)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "大会IDは10桁の半角数字で指定してください"
+      });
+    }
+
+    const db = getFirebaseDb();
+
+    const eventRef =
+      db.collection("events").doc(eventId);
+
+    const eventDoc =
+      await eventRef.get();
+
+    if (!eventDoc.exists) {
+      return res.status(404).json({
+        success: false,
+        message: "大会が見つかりません"
+      });
+    }
+
+    const rosterSnap =
+      await eventRef
+        .collection("roster")
+        .get();
+
+    const roster = [];
+
+    rosterSnap.forEach((doc) => {
+      const data = doc.data() || {};
+
+      roster.push({
+        lane: String(data.lane || doc.id || ""),
+        bib: String(data.bib || ""),
+        name: String(data.name || ""),
+        team: String(data.team || "")
+      });
+    });
+
+    roster.sort(
+      (a, b) =>
+        Number(a.lane) - Number(b.lane)
+    );
+
+    const eventData =
+      eventDoc.data() || {};
+
+    return res.json({
+      success: true,
+
+      event: {
+        eventId:
+          String(
+            eventData.eventId ||
+            eventId
+          ),
+        note:
+          String(eventData.note || "")
+      },
+
+      roster
+    });
+
+  } catch (error) {
+    console.error(
+      "FIREBASE ROSTER ERROR",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Firebaseの名簿を取得できませんでした"
+    });
+  }
+});
 // ========================================
 // 管理者ログイン
 // ========================================
