@@ -837,9 +837,15 @@ function hostLoginView() {
 }
 function currentHostLinksHtml() {
   const tokens = state.tokensData || {};
+
   return `
 <div class="nav">
   <a href="#/judge?jid=J1&t=${encodeURIComponent(tokens.judge1 || "")}">審判1</a>
+  <a href="#/judge?jid=J2&t=${encodeURIComponent(tokens.judge2 || "")}">審判2</a>
+  <a href="#/judge?jid=J3&t=${encodeURIComponent(tokens.judge3 || "")}">審判3</a>
+  <a href="#/judge?jid=J4&t=${encodeURIComponent(tokens.judge4 || "")}">審判4</a>
+  <a href="#/judge?jid=J5&t=${encodeURIComponent(tokens.judge5 || "")}">審判5</a>
+
   <a href="#/chiefjudge?t=${encodeURIComponent(tokens.chiefjudge || "")}">審判主任</a>
   <a href="#/recorder?t=${encodeURIComponent(tokens.recorder || "")}">記録</a>
   <a href="#/chief?t=${encodeURIComponent(tokens.chief || "")}">記録主任</a>
