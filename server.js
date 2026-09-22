@@ -1099,8 +1099,8 @@ wss.on("connection", (ws) => {
       }
 
       const tokens = loadTokens();
-      tokens[target] = makeToken();
-　　　await saveTokens(tokens);
+            tokens[target] = makeToken();
+      await saveTokens(tokens);
 
       send(ws, {
         op: "OK",
