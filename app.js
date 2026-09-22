@@ -1792,23 +1792,42 @@ function hostView() {
             `).join("")}
           </select>
 
-          <button id="loadBtn" class="secondary" ${raceActive ? "disabled" : ""}>読み込み</button>
-          <button id="saveBtn" ${raceActive ? "disabled" : ""}>保存</button>
+            <button
+            id="loadBtn"
+            class="secondary"
+            ${raceActive ? "disabled" : ""}
+          >
+            読み込み
+          </button>
+
+          <button
+            id="saveBtn"
+            ${raceActive ? "disabled" : ""}
+          >
+            保存
+          </button>
+
           ${
-  raceActive
-    ? `
-        <button id="endRaceBtn" class="danger">
-          現在の競技を終了
-        </button>
-      `
-    : `
-        <button id="applyBtn">
-          このグループで開始（名簿反映＋ログ初期化）
-        </button>
-      `
-}
-         
-          <button id="clearBtn" class="danger" ${raceActive ? "disabled" : ""}>このグループ名簿を全消去</button>
+            raceActive
+              ? `
+                  <button id="endRaceBtn" class="danger">
+                    現在の競技を終了
+                  </button>
+                `
+              : `
+                  <button id="applyBtn">
+                    このグループで開始（名簿反映＋ログ初期化）
+                  </button>
+                `
+          }
+
+          <button
+            id="clearBtn"
+            class="danger"
+            ${raceActive ? "disabled" : ""}
+          >
+            このグループ名簿を全消去
+          </button>
         </div>
       </details>
     </div>
