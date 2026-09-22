@@ -439,7 +439,57 @@ async function getEventRoster(eventId) {
   };
 }
 
+// =====================================================
+// 設定係パスコード
+// =====================================================
 
+async function saveHostPasscode(data) {
+  const db = getFirebaseDb();
+
+  await db
+    .collection("system")
+    .doc("auth")
+    .set(
+      {
+        hostPasscode: {
+          salt: String(data?.salt || ""),
+          hash: String(data?.hash || ""),
+        },
+        updatedAt: Date.now(),
+      },
+      { merge: true }
+    );
+}
+
+
+async function loadHostPasscode() {
+  const db = getFirebaseDb();
+
+  const snap = await db
+    .collection("system")
+    .doc("auth")
+    .get();
+
+  if (!snap.exists) {
+    return null;
+  }
+
+  const data = snap.data() || {};
+  const saved = data.hostPasscode;
+
+  if (
+    !saved ||
+    !saved.salt ||
+    !saved.hash
+  ) {
+    return null;
+  }
+
+  return {
+    salt: String(saved.salt),
+    hash: String(saved.hash),
+  };
+}
 // =====================================================
 // Export
 // =====================================================
@@ -457,4 +507,7 @@ module.exports = {
 
   getEvents,
   getEventRoster,
+
+  saveHostPasscode,
+loadHostPasscode,
 };
