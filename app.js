@@ -1568,23 +1568,13 @@ const chiefTools = isChief ? `
               <span class="ok">
                 ⚪ 現在、競技中のグループはありません
               </span>
-
-              <button id="resetBtn" class="danger">
-                ログ初期化
-              </button>
             `
       }
-    </div>
 
-    ${
-      raceActive
-        ? `
-            <div class="small" style="margin-top:8px;">
-              競技中はログを初期化できません
-            </div>
-          `
-        : ""
-    }
+      <button id="resetBtn" class="danger">
+        ログ初期化
+      </button>
+    </div>
   </div>
 ` : "";
 
