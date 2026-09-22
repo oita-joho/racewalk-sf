@@ -2260,25 +2260,27 @@ function bindEvents() {
       render();
     });
   });
-  const dsq1Btn = $("#dsq1Btn");
-  if (dsq1Btn) {
-    dsq1Btn.addEventListener("click", () => {
-      const lane = (uiLane || "").trim();
-      send({ op: "NEW_CHIEF", lane, type: "dsq1" });
-      uiLane = "";
-      render();
-    });
-  }
+    // ===== 主任：失格送信 =====
+  [
+    ["dsq1Btn", "dsq1"],
+    ["dsq2Btn", "dsq2"],
+  ].forEach(([id, type]) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
 
-  const dsq2Btn = $("#dsq2Btn");
-  if (dsq2Btn) {
-    dsq2Btn.addEventListener("click", () => {
+    btn.addEventListener("click", () => {
       const lane = (uiLane || "").trim();
-      send({ op: "NEW_CHIEF", lane, type: "dsq2" });
+
+      send({
+        op: "NEW_CHIEF",
+        lane,
+        type
+      });
+
       uiLane = "";
       render();
     });
-  }
+  });
 
   document.querySelectorAll("[data-confirm]").forEach((btn) => {
     btn.addEventListener("click", () => {
