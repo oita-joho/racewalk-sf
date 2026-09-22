@@ -1,10 +1,104 @@
 // auth.js
 // 競歩システム：認証・当日トークン管理
-
 const crypto = require("crypto");
 const firebaseStore = require("./firebase-store");
 
 let tokenCache = null;
+
+
+// =====================================================
+// 設定係パスコード
+// =====================================================
+
+function hashPasscode(passcode, salt) {
+  return crypto
+    .scryptSync(
+      String(passcode),
+      salt,
+      64
+    )
+    .toString("hex");
+}
+
+
+async function setHostPasscode(passcode) {
+  const value =
+    String(passcode || "").trim();
+
+  if (value.length < 4) {
+    throw new Error(
+      "設定係パスコードは4文字以上にしてください"
+    );
+  }
+
+  const salt =
+    crypto.randomBytes(16)
+      .toString("hex");
+
+  const hash =
+    hashPasscode(value, salt);
+
+  await firebaseStore.saveHostPasscode({
+    salt,
+    hash,
+  });
+}
+
+
+async function verifyHostPasscode(passcode) {
+  const saved =
+    await firebaseStore.loadHostPasscode();
+
+  // Firebaseへ移行するまでの初回だけ
+  // RenderのHOST_PASSCODEを使用する
+  if (!saved?.salt || !saved?.hash) {
+    const oldPasscode =
+      process.env.HOST_PASSCODE || "";
+
+    if (!oldPasscode) {
+      return false;
+    }
+
+    if (
+      String(passcode) !== oldPasscode
+    ) {
+      return false;
+    }
+
+    // 初回ログイン成功時にFirebaseへ移行
+    await setHostPasscode(oldPasscode);
+
+    console.log(
+      "設定係パスコードをFirebaseへ移行しました"
+    );
+
+    return true;
+  }
+
+  const inputHash =
+    hashPasscode(
+      passcode,
+      saved.salt
+    );
+
+  const a =
+    Buffer.from(
+      inputHash,
+      "hex"
+    );
+
+  const b =
+    Buffer.from(
+      saved.hash,
+      "hex"
+    );
+
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(a, b);
+}
 
 
 // =====================================================
@@ -240,6 +334,9 @@ module.exports = {
   initializeTokens,
   loadTokens,
   saveTokens,
+
+  setHostPasscode,
+  verifyHostPasscode,
 
   judgeIdToRole,
   tokenOkFor,
