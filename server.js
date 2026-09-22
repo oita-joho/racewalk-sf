@@ -44,6 +44,199 @@ function getFirebaseDb() {
   return firebaseDb;
 }
 // =====================================================
+// Firebase：当日運用データ
+// =====================================================
+
+// Firestore
+// system / racewalk
+//
+// 保存内容
+// ・settingsPasscodeHash : 設定係パスコード（後で使用）
+// ・tokens               : 当日使用する各係トークン
+// ・runtime              : 現在の競技状態
+//
+// 競技記録は
+// system/racewalk/records/{id}
+// に保存する
+
+function racewalkSystemRef() {
+  return getFirebaseDb()
+    .collection("system")
+    .doc("racewalk");
+}
+
+
+// -----------------------------------------------------
+// 当日トークン保存
+// -----------------------------------------------------
+async function saveTokensToFirebase(tokens) {
+  const cleanTokens = {
+    host: String(tokens?.host || ""),
+    judge1: String(tokens?.judge1 || ""),
+    judge2: String(tokens?.judge2 || ""),
+    judge3: String(tokens?.judge3 || ""),
+    judge4: String(tokens?.judge4 || ""),
+    judge5: String(tokens?.judge5 || ""),
+    chiefjudge: String(tokens?.chiefjudge || ""),
+    recorder: String(tokens?.recorder || ""),
+    chief: String(tokens?.chief || ""),
+  };
+
+  await racewalkSystemRef().set(
+    {
+      tokens: cleanTokens,
+      tokensUpdatedAt:
+        admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  return cleanTokens;
+}
+
+
+// -----------------------------------------------------
+// 当日トークン読込
+// -----------------------------------------------------
+async function loadTokensFromFirebase() {
+  const doc =
+    await racewalkSystemRef().get();
+
+  if (!doc.exists) {
+    return null;
+  }
+
+  const data = doc.data() || {};
+  const tokens = data.tokens;
+
+  if (!tokens || typeof tokens !== "object") {
+    return null;
+  }
+
+  return {
+    host: String(tokens.host || ""),
+    judge1: String(tokens.judge1 || ""),
+    judge2: String(tokens.judge2 || ""),
+    judge3: String(tokens.judge3 || ""),
+    judge4: String(tokens.judge4 || ""),
+    judge5: String(tokens.judge5 || ""),
+    chiefjudge: String(tokens.chiefjudge || ""),
+    recorder: String(tokens.recorder || ""),
+    chief: String(tokens.chief || ""),
+  };
+}
+
+
+// -----------------------------------------------------
+// 現在の競技状態を保存
+// -----------------------------------------------------
+async function saveRuntimeToFirebase() {
+  await racewalkSystemRef().set(
+    {
+      runtime: {
+        raceId: String(state.raceId || ""),
+        seq: Number(state.seq || 1),
+        currentGroup:
+          Number(state.currentGroup || 1),
+        raceActive:
+          state.raceActive === true,
+      },
+
+      runtimeUpdatedAt:
+        admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+
+// -----------------------------------------------------
+// 現在の競技状態を読込
+// -----------------------------------------------------
+async function loadRuntimeFromFirebase() {
+  const doc =
+    await racewalkSystemRef().get();
+
+  if (!doc.exists) {
+    return null;
+  }
+
+  const data = doc.data() || {};
+  const runtime = data.runtime;
+
+  if (!runtime || typeof runtime !== "object") {
+    return null;
+  }
+
+  return {
+    raceId:
+      String(runtime.raceId || ""),
+
+    seq:
+      Number(runtime.seq || 1),
+
+    currentGroup:
+      safeGroup(runtime.currentGroup),
+
+    raceActive:
+      runtime.raceActive === true,
+  };
+}
+
+
+// -----------------------------------------------------
+// 注意・警告・失格・通告を保存
+// -----------------------------------------------------
+async function saveRecordToFirebase(item) {
+  if (!item?.id) {
+    throw new Error(
+      "保存する競技記録にIDがありません"
+    );
+  }
+
+  await racewalkSystemRef()
+    .collection("records")
+    .doc(String(item.id))
+    .set(
+      {
+        ...item,
+        updatedAt:
+          admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+}
+
+
+// -----------------------------------------------------
+// 競技記録をFirebaseから読込
+// -----------------------------------------------------
+async function loadRecordsFromFirebase() {
+  const snap =
+    await racewalkSystemRef()
+      .collection("records")
+      .get();
+
+  const records = [];
+
+  snap.forEach((doc) => {
+    const data = doc.data() || {};
+
+    records.push({
+      ...data,
+      id: String(data.id || doc.id),
+    });
+  });
+
+  records.sort(
+    (a, b) =>
+      Number(a.tsMs || 0) -
+      Number(b.tsMs || 0)
+  );
+
+  return records;
+}
+// =====================================================
 // Config / Files
 // =====================================================
 const PORT = process.env.PORT || 8080;
