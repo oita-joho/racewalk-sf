@@ -129,7 +129,47 @@ async function loadTokensFromFirebase() {
     chief: String(tokens.chief || ""),
   };
 }
+// -----------------------------------------------------
+// 起動時：当日トークン初期化
+// -----------------------------------------------------
+async function initializeTokens() {
 
+  // 1. Firebaseに保存済みなら、それを使用
+  const firebaseTokens =
+    await loadTokensFromFirebase();
+
+  if (firebaseTokens) {
+    tokenCache = firebaseTokens;
+
+    console.log(
+      "当日トークンをFirebaseから復元しました"
+    );
+
+    return tokenCache;
+  }
+
+
+  // 2. Firebaseにまだ無い場合だけ、
+  //    旧tokens.jsonから移行
+  let initialTokens;
+
+  try {
+    initialTokens = loadTokensFromLocalFile();
+  } catch {
+    initialTokens = defaultTokens();
+  }
+
+
+  // 3. Firebaseへ初回保存
+  tokenCache =
+    await saveTokensToFirebase(initialTokens);
+
+  console.log(
+    "当日トークンをFirebaseへ初回保存しました"
+  );
+
+  return tokenCache;
+}
 
 // -----------------------------------------------------
 // 現在の競技状態を保存
