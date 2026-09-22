@@ -1554,29 +1554,41 @@ let cautionNo = 0;
       `;
     }).join("");
 
-  const chiefTools = isChief ? `
+const chiefTools = isChief ? `
   <div class="card">
-    <div class="row">
+    <div class="row" style="align-items:center;gap:12px;">
       ${
         raceActive
           ? `
               <span class="alert">
                 🔴 グループ${esc(currentGroup)} 競技中
               </span>
-              <button id="endRaceBtn" class="danger">
-                現在の競技を終了
-              </button>
             `
           : `
               <span class="ok">
                 ⚪ 現在、競技中のグループはありません
               </span>
-              <button id="resetBtn" class="danger">
-                ログ初期化
-              </button>
             `
       }
+
+      <button
+        id="resetBtn"
+        class="danger"
+        ${raceActive ? "disabled" : ""}
+      >
+        ログ初期化
+      </button>
     </div>
+
+    ${
+      raceActive
+        ? `
+            <div class="small" style="margin-top:8px;">
+              競技中はログを初期化できません
+            </div>
+          `
+        : ""
+    }
   </div>
 ` : "";
 
