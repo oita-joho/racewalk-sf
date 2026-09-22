@@ -981,11 +981,60 @@ function adminView() {
             設定係トークンを更新
           </button>
 
-          <div
+                  <div
             id="adminMessage"
             style="margin-top:15px;"
           ></div>
         </div>
+
+
+        <div style="margin-top:30px;">
+          <div class="big">
+            設定係パスコード管理
+          </div>
+
+          <p>
+            設定係がログインするときに使用する
+            パスコードを変更します。
+          </p>
+
+          <div style="margin-top:12px;">
+            <input
+              id="newHostPasscode"
+              type="password"
+              placeholder="新しいパスコード"
+              autocomplete="new-password"
+              style="width:100%;box-sizing:border-box;"
+            >
+          </div>
+
+          <div style="margin-top:10px;">
+            <input
+              id="confirmHostPasscode"
+              type="password"
+              placeholder="新しいパスコード（確認）"
+              autocomplete="new-password"
+              style="width:100%;box-sizing:border-box;"
+            >
+          </div>
+
+          <div style="margin-top:12px;">
+            <button
+              id="changeHostPasscodeBtn"
+              type="button"
+            >
+              設定係パスコードを変更
+            </button>
+          </div>
+
+          <div
+            id="hostPasscodeMessage"
+            class="small"
+            style="margin-top:10px;"
+          ></div>
+        </div>
+
+
 <div style="margin-top:30px;">
   <div class="big">Firebase 名簿管理</div>
 
@@ -1957,8 +2006,145 @@ if (typeof window.ensureFirebaseBox === "function") {
         console.error(error);
         alert("サーバーとの通信に失敗しました。");
       }
-    };
+      };
   }
+
+
+  // ------------------------------
+  // 設定係パスコード変更
+  // ------------------------------
+  const changePasscodeBtn =
+    $("#changeHostPasscodeBtn");
+
+  if (changePasscodeBtn) {
+    changePasscodeBtn.onclick =
+      async () => {
+
+        const input1 =
+          $("#newHostPasscode");
+
+        const input2 =
+          $("#confirmHostPasscode");
+
+        const message =
+          $("#hostPasscodeMessage");
+
+        const passcode =
+          String(
+            input1?.value || ""
+          ).trim();
+
+        const confirmPasscode =
+          String(
+            input2?.value || ""
+          ).trim();
+
+
+        if (message) {
+          message.textContent = "";
+        }
+
+
+        if (passcode.length < 4) {
+          if (message) {
+            message.textContent =
+              "パスコードは4文字以上にしてください。";
+          }
+          return;
+        }
+
+
+        if (
+          passcode !==
+          confirmPasscode
+        ) {
+          if (message) {
+            message.textContent =
+              "確認用パスコードが一致しません。";
+          }
+          return;
+        }
+
+
+        const ok = confirm(
+          "設定係パスコードを変更しますか？"
+        );
+
+        if (!ok) return;
+
+
+        changePasscodeBtn.disabled =
+          true;
+
+
+        try {
+          const response =
+            await fetch(
+              "/api/admin/host-passcode",
+              {
+                method: "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  token: adminToken,
+                  passcode
+                })
+              }
+            );
+
+
+          const data =
+            await response.json();
+
+
+          if (
+            !response.ok ||
+            !data.success
+          ) {
+            if (message) {
+              message.textContent =
+                data.message ||
+                "パスコードを変更できませんでした。";
+            }
+
+            return;
+          }
+
+
+          if (input1) {
+            input1.value = "";
+          }
+
+          if (input2) {
+            input2.value = "";
+          }
+
+
+          if (message) {
+            message.textContent =
+              "設定係パスコードを変更しました。";
+          }
+
+
+        } catch (error) {
+          console.error(error);
+
+          if (message) {
+            message.textContent =
+              "サーバーとの通信に失敗しました。";
+          }
+
+        } finally {
+          changePasscodeBtn.disabled =
+            false;
+        }
+      };
+  }
+
 
   // ------------------------------
   // 管理者終了
