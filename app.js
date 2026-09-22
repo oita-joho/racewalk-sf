@@ -1769,7 +1769,7 @@ function hostView() {
         当日はQRコードを印刷して配布してください<br>
         
       </div>
-
+    </div>
 
 
     <div id="firebaseMount"></div>
