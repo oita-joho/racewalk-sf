@@ -817,14 +817,7 @@ if (op === "CANCEL") {
     // Chief actions
     // -----------------------------
     if (op === "RESET") {
-      if (state.raceActive) {
-        return reject(
-          ws,
-          `グループ${state.currentGroup}が競技中のため、ログ初期化はできません`
-        );
-      }
-
-            resetLogKeepRoster();
+      resetLogKeepRoster();
 
       await saveRuntimeToFirebase(state);
 
@@ -835,6 +828,7 @@ if (op === "CANCEL") {
         currentGroup: state.currentGroup,
         raceActive: state.raceActive,
       });
+
       return;
     }
 
