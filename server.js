@@ -9,132 +9,26 @@ const crypto = require("crypto");
 const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
-const admin = require("firebase-admin");
+const firebaseStore = require("./firebase-store");
 
 // =====================================================
-// Firebase Admin
+// Firebase Store
 // =====================================================
-let firebaseDb = null;
+const {
+  getFirebaseDb,
+  saveTokens: saveTokensToFirebase,
+  loadTokens: loadTokensFromFirebase,
+  saveRuntime: saveRuntimeToFirebase,
+  loadRuntime: loadRuntimeFromFirebase,
+  saveRecord: saveRecordToFirebase,
+  loadRecords: loadRecordsFromFirebase,
+} = firebaseStore;
 
-function getFirebaseDb() {
-  if (firebaseDb) {
-    return firebaseDb;
-  }
 
-  const raw =
-    process.env.FIREBASE_SERVICE_ACCOUNT || "";
-
-  if (!raw) {
-    throw new Error(
-      "FIREBASE_SERVICE_ACCOUNT が設定されていません"
-    );
-  }
-
-  const serviceAccount = JSON.parse(raw);
-
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential:
-        admin.credential.cert(serviceAccount)
-    });
-  }
-
-  firebaseDb = admin.firestore();
-
-  return firebaseDb;
-}
-// =====================================================
-// 当日トークン：メモリキャッシュ
-// =====================================================
+// 当日トークンは通常メモリから使用する。
+// 更新時とRender再起動時だけFirebaseと同期する。
 let tokenCache = null;
-// =====================================================
-// Firebase：当日運用データ
-// =====================================================
-
-// Firestore
-// system / racewalk
-//
-// 保存内容
-// ・settingsPasscodeHash : 設定係パスコード（後で使用）
-// ・tokens               : 当日使用する各係トークン
-// ・runtime              : 現在の競技状態
-//
-// 競技記録は
-// system/racewalk/records/{id}
-// に保存する
-
-function racewalkSystemRef() {
-  return getFirebaseDb()
-    .collection("system")
-    .doc("racewalk");
-}
-
-
-// -----------------------------------------------------
-// 当日トークン保存
-// -----------------------------------------------------
-async function saveTokensToFirebase(tokens) {
-  const cleanTokens = {
-    host: String(tokens?.host || ""),
-    judge1: String(tokens?.judge1 || ""),
-    judge2: String(tokens?.judge2 || ""),
-    judge3: String(tokens?.judge3 || ""),
-    judge4: String(tokens?.judge4 || ""),
-    judge5: String(tokens?.judge5 || ""),
-    chiefjudge: String(tokens?.chiefjudge || ""),
-    recorder: String(tokens?.recorder || ""),
-    chief: String(tokens?.chief || ""),
-  };
-
-  await racewalkSystemRef().set(
-    {
-      tokens: cleanTokens,
-      tokensUpdatedAt:
-        admin.firestore.FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
-
-  return cleanTokens;
-}
-
-
-// -----------------------------------------------------
-// 当日トークン読込
-// -----------------------------------------------------
-async function loadTokensFromFirebase() {
-  const doc =
-    await racewalkSystemRef().get();
-
-  if (!doc.exists) {
-    return null;
-  }
-
-  const data = doc.data() || {};
-  const tokens = data.tokens;
-
-  if (!tokens || typeof tokens !== "object") {
-    return null;
-  }
-
-  return {
-    host: String(tokens.host || ""),
-    judge1: String(tokens.judge1 || ""),
-    judge2: String(tokens.judge2 || ""),
-    judge3: String(tokens.judge3 || ""),
-    judge4: String(tokens.judge4 || ""),
-    judge5: String(tokens.judge5 || ""),
-    chiefjudge: String(tokens.chiefjudge || ""),
-    recorder: String(tokens.recorder || ""),
-    chief: String(tokens.chief || ""),
-  };
-}
-// -----------------------------------------------------
-// 起動時：当日トークン初期化
-// -----------------------------------------------------
 async function initializeTokens() {
-
-  // 1. Firebaseに保存済みなら、それを使用
   const firebaseTokens =
     await loadTokensFromFirebase();
 
@@ -148,19 +42,11 @@ async function initializeTokens() {
     return tokenCache;
   }
 
+  // Firebaseにトークンがない場合だけ
+  // 旧tokens.jsonから初回移行
+  const initialTokens =
+    loadTokensFromLocalFile();
 
-  // 2. Firebaseにまだ無い場合だけ、
-  //    旧tokens.jsonから移行
-  let initialTokens;
-
-  try {
-    initialTokens = loadTokensFromLocalFile();
-  } catch {
-    initialTokens = defaultTokens();
-  }
-
-
-  // 3. Firebaseへ初回保存
   tokenCache =
     await saveTokensToFirebase(initialTokens);
 
@@ -169,145 +55,6 @@ async function initializeTokens() {
   );
 
   return tokenCache;
-}
-
-// -----------------------------------------------------
-// 現在の競技状態を保存
-// -----------------------------------------------------
-async function saveRuntimeToFirebase() {
-
-  const roster =
-    Object.values(state.rosterByLane || {})
-      .map((a) => ({
-        lane: String(a.lane || ""),
-        bib: String(a.bib || ""),
-        name: String(a.name || ""),
-        team: String(a.team || ""),
-      }));
-
-  await racewalkSystemRef().set(
-    {
-      runtime: {
-        raceId: String(state.raceId || ""),
-        seq: Number(state.seq || 1),
-        currentGroup:
-          Number(state.currentGroup || 1),
-        raceActive:
-          state.raceActive === true,
-
-        // Render再起動時に現在の名簿も復元する
-        roster,
-      },
-
-      runtimeUpdatedAt:
-        admin.firestore.FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
-}
-// -----------------------------------------------------
-// 現在の競技状態を読込
-// -----------------------------------------------------
-async function loadRuntimeFromFirebase() {
-  const doc =
-    await racewalkSystemRef().get();
-
-  if (!doc.exists) {
-    return null;
-  }
-
-  const data = doc.data() || {};
-  const runtime = data.runtime;
-
-  if (!runtime || typeof runtime !== "object") {
-    return null;
-  }
-
-  return {
-    raceId:
-      String(runtime.raceId || ""),
-
-    seq:
-      Number(runtime.seq || 1),
-
-    currentGroup:
-      safeGroup(runtime.currentGroup),
-
-    raceActive:
-      runtime.raceActive === true,
-
-    roster:
-      Array.isArray(runtime.roster)
-        ? runtime.roster
-        : [],
-  };
-}
-
-// -----------------------------------------------------
-// 注意・警告・失格・通告を保存
-// -----------------------------------------------------
-async function saveRecordToFirebase(item) {
-
-  if (!item?.id || !item?.raceId) {
-    throw new Error(
-      "保存する競技記録のIDまたはraceIdがありません"
-    );
-  }
-
-  // raceIdを付けることで、
-  // 次の競技のINF-00001による上書きを防ぐ
-  const docId =
-    `${item.raceId}_${item.id}`;
-
-  await racewalkSystemRef()
-    .collection("records")
-    .doc(docId)
-    .set(
-      {
-        ...item,
-        updatedAt:
-          admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-}
-// -----------------------------------------------------
-// 競技記録をFirebaseから読込
-// -----------------------------------------------------
-async function loadRecordsFromFirebase(raceId) {
-
-  if (!raceId) {
-    return [];
-  }
-
-  const snap =
-    await racewalkSystemRef()
-      .collection("records")
-      .where(
-        "raceId",
-        "==",
-        String(raceId)
-      )
-      .get();
-
-  const records = [];
-
-  snap.forEach((doc) => {
-    const data = doc.data() || {};
-
-    records.push({
-      ...data,
-      id: String(data.id || ""),
-    });
-  });
-
-  records.sort(
-    (a, b) =>
-      Number(a.tsMs || 0) -
-      Number(b.tsMs || 0)
-  );
-
-  return records;
 }
 // =====================================================
 // Config / Files
@@ -599,7 +346,7 @@ async function initializeRuntime() {
   // Firebaseにまだ競技状態が無い場合
   if (!runtime || !runtime.raceId) {
 
-    await saveRuntimeToFirebase();
+    await saveRuntimeToFirebase(state);
 
     console.log(
       "競技状態をFirebaseへ初回保存しました"
@@ -1108,10 +855,10 @@ wss.on("connection", (ws) => {
       const reqJudgeId = msg.judgeId ? String(msg.judgeId) : null;
       const token = String(msg.token || msg.t || "");
 
-      console.log("HELLO", { reqRole, reqJudgeId, token });
+      
 
       if (!tokenOkFor(reqRole, reqJudgeId, token)) {
-        console.log("TOKEN NG", { reqRole, reqJudgeId, token });
+        
         send(ws, { op: "REJECT", reason: "tokenが違うか、この役割の権限がありません" });
         try { ws.close(); } catch {}
         return;
@@ -1190,7 +937,7 @@ wss.on("connection", (ws) => {
       state.raceActive = true;
 
       // 競技開始状態・グループ・名簿をFirebase保存
-      await saveRuntimeToFirebase();
+      await saveRuntimeToFirebase(state);
 
       broadcast({
         op: "EVENT",
@@ -1225,7 +972,7 @@ wss.on("connection", (ws) => {
             state.raceActive = false;
 
       // 競技終了状態をFirebase保存
-      await saveRuntimeToFirebase();
+      await saveRuntimeToFirebase(state);
 
       broadcast({
         op: "EVENT",
@@ -1306,26 +1053,24 @@ send(ws, {
     // -----------------------------
     // Recorder actions
     // -----------------------------
-    if (op === "CONFIRM") {
-      const id = String(msg.id || "");
-      const inf = state.byId[id];
-      if (!inf) return;
+if (op === "CONFIRM") {
+  const id = String(msg.id || "");
+  const inf = state.byId[id];
 
-        inf.status = "confirmed";
+  if (!inf) return;
 
-      await saveRecordToFirebase(inf);
+  inf.status = "confirmed";
 
-  // 取消状態をFirebaseへ保存
   await saveRecordToFirebase(inf);
 
   broadcast({
     op: "EVENT",
     kind: "UPDATE",
-    item: inf
+    item: inf,
   });
 
   return;
-    }
+}
 if (op === "CANCEL") {
   const id = String(msg.id || "");
   const inf = state.byId[id];
@@ -1354,12 +1099,15 @@ if (op === "CANCEL") {
     inf.type,
     inf.level
   );
-  delete state.activeKeyToId[kThis];
+    delete state.activeKeyToId[kThis];
+
+  // 取消状態をFirebaseにも保存
+  await saveRecordToFirebase(inf);
 
   broadcast({
     op: "EVENT",
     kind: "UPDATE",
-    item: inf
+    item: inf,
   });
 
   return;
@@ -1377,7 +1125,7 @@ if (op === "CANCEL") {
 
             resetLogKeepRoster();
 
-      await saveRuntimeToFirebase();
+      await saveRuntimeToFirebase(state);
 
       broadcast({
         op: "EVENT",
@@ -1440,7 +1188,7 @@ if (op === "CANCEL") {
       await saveRecordToFirebase(inf);
 
       // seqも保存
-      await saveRuntimeToFirebase();
+      await saveRuntimeToFirebase(state);
 
       broadcast({
         op: "EVENT",
@@ -1481,7 +1229,7 @@ if (op === "CANCEL") {
       await saveRecordToFirebase(inf);
 
       // seqをFirebaseへ保存
-      await saveRuntimeToFirebase();
+      await saveRuntimeToFirebase(state);
 
       broadcast({
         op: "EVENT",
