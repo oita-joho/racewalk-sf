@@ -2363,12 +2363,33 @@ if (endRaceBtn) {
   });
 }
   const resetBtn = $("#resetBtn");
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      if (!confirm("ログのみ初期化します（名簿は残ります）。よろしいですか？")) return;
-      send({ op: "RESET" });
+
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+
+    // 1回目の確認
+    if (
+      !confirm(
+        "ログのみ初期化します（名簿は残ります）。よろしいですか？"
+      )
+    ) {
+      return;
+    }
+
+    // 2回目の最終確認
+    if (
+      !confirm(
+        "【最終確認】本当にログを初期化しますか？\nこの操作は元に戻せません。"
+      )
+    ) {
+      return;
+    }
+
+    send({
+      op: "RESET"
     });
-  }
+  });
+}
 
   if (p === "/host") {
     const groupSelect = $("#groupSelect");
