@@ -11,7 +11,7 @@ const http = require("http");
 const WebSocket = require("ws");
 const firebaseStore = require("./firebase-store");
 const raceState = require("./race-state");
-
+const auth = require("./auth");
 const {
   state,
   safeGroup,
@@ -22,51 +22,24 @@ const {
   resetLogKeepRoster,
   initializeRuntime,
 } = raceState;
+const {
+  makeToken,
+  initializeTokens,
+  loadTokens,
+  saveTokens,
+  tokenOkFor,
+  requiredRole,
+} = auth;
 // =====================================================
 // Firebase Store
 // =====================================================
 const {
   getFirebaseDb,
-  saveTokens: saveTokensToFirebase,
-  loadTokens: loadTokensFromFirebase,
   saveRuntime: saveRuntimeToFirebase,
-  loadRuntime: loadRuntimeFromFirebase,
   saveRecord: saveRecordToFirebase,
-  loadRecords: loadRecordsFromFirebase,
 } = firebaseStore;
 
 
-// 当日トークンは通常メモリから使用する。
-// 更新時とRender再起動時だけFirebaseと同期する。
-let tokenCache = null;
-async function initializeTokens() {
-  const firebaseTokens =
-    await loadTokensFromFirebase();
-
-  if (firebaseTokens) {
-    tokenCache = firebaseTokens;
-
-    console.log(
-      "当日トークンをFirebaseから復元しました"
-    );
-
-    return tokenCache;
-  }
-
-  // Firebaseにトークンがない場合だけ
-  // 旧tokens.jsonから初回移行
-  const initialTokens =
-    loadTokensFromLocalFile();
-
-  tokenCache =
-    await saveTokensToFirebase(initialTokens);
-
-  console.log(
-    "当日トークンをFirebaseへ初回保存しました"
-  );
-
-  return tokenCache;
-}
 // =====================================================
 // Config / Files
 // =====================================================
@@ -75,15 +48,10 @@ const HOST_PASSCODE = process.env.HOST_PASSCODE || "";
 const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "";
 const DATA_DIR = path.join(__dirname, "data");
 const ROSTER_FILE = (g) => path.join(DATA_DIR, `roster_g${g}.json`);
-const TOKENS_FILE = path.join(DATA_DIR, "tokens.json");
+
 let adminToken = "";
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-
-// host だけ固定
-const FIXED_TOKENS = {
-  host: "rw_HOST_z8T1mV6qK3c9",
-};
 
 // =====================================================
 // Utilities
@@ -117,147 +85,6 @@ function localIPv4Candidates() {
     }
   }
   return out;
-}
-
-function makeToken(len = 16) {
-  return crypto.randomBytes(24).toString("base64url").slice(0, len);
-}
-
-function defaultTokens() {
-  return {
-    host: "rw_HOST_" + makeToken(),
-    judge1: "rw_J1_7fK2mQpL8x",
-    judge2: "rw_J2_B4nYt3Qa9v",
-    judge3: "rw_J3_U8dLp2Zc5k",
-    judge4: "rw_J4_H6xNm1Tr7s",
-    judge5: "rw_J5_W9qAz4Mv2e",
-
-    chiefjudge: "rw_CJ_X5pLm8Qr2n",
-    recorder: "rw_REC_K7tVb3Yp6m",
-    chief: "rw_CHIEF_R4xQn9Td1c",
-  };
-}
-
-function mergeWithDefaults(obj) {
-  return {
-    ...defaultTokens(),
-    ...(obj && typeof obj === "object" ? obj : {}),
-  };
-}
-
-// =====================================================
-// Token auth (tokens.json)
-// host は固定、他は保存型
-// =====================================================
-// -----------------------------------------------------
-// 旧tokens.json読込
-// Firebaseへの初回移行時だけ使用
-// -----------------------------------------------------
-function loadTokensFromLocalFile() {
-
-  if (!fs.existsSync(TOKENS_FILE)) {
-    return defaultTokens();
-  }
-
-  try {
-    const v =
-      JSON.parse(
-        fs.readFileSync(
-          TOKENS_FILE,
-          "utf8"
-        )
-      );
-
-    return mergeWithDefaults(v);
-
-  } catch {
-    return defaultTokens();
-  }
-}
-
-
-// -----------------------------------------------------
-// 現在のトークン取得
-// 通常処理はメモリキャッシュを使用
-// -----------------------------------------------------
-function loadTokens() {
-
-  if (tokenCache) {
-    return tokenCache;
-  }
-
-  // Firebase初期化前だけの安全策
-  return loadTokensFromLocalFile();
-}
-
-
-// -----------------------------------------------------
-// トークン更新
-// メモリ + Firebase
-// -----------------------------------------------------
-async function saveTokens(tokens) {
-
-  tokenCache = {
-    ...tokens
-  };
-
-  await saveTokensToFirebase(
-    tokenCache
-  );
-
-  return tokenCache;
-}
-
-function judgeIdToRole(judgeId) {
-  const s = String(judgeId || "").trim().toUpperCase();
-  if (s === "J1") return "judge1";
-  if (s === "J2") return "judge2";
-  if (s === "J3") return "judge3";
-  if (s === "J4") return "judge4";
-  if (s === "J5") return "judge5";
-  return null;
-}
-
-function tokenOkFor(role, judgeId, token) {
-  if (role === "board") return true; // board は公開のまま
-
-  const t = String(token || "").trim();
-  if (!t) return false;
-
-const tokens = loadTokens();
-
-if (role === "host") {
-  return tokens.host === t;
-}
-
-  if (role === "judge") {
-    const key = judgeIdToRole(judgeId);
-    return !!(key && tokens[key] === t);
-  }
-
-  if (role === "chiefjudge") return tokens.chiefjudge === t;
-  if (role === "recorder") return tokens.recorder === t;
-  if (role === "chief") return tokens.chief === t;
-
-  return false;
-}
-
-function requiredRole(op) {
-  if (
-    op === "LOAD_ROSTER" ||
-    op === "SAVE_ROSTER" ||
-    op === "CLEAR_ROSTER" ||
-    op === "APPLY_GROUP" ||
-    op === "GET_TOKENS" ||
-    op === "REGEN_TOKEN" ||
-    op === "REGEN_ALL_TOKENS"
-  ) return ["host"];
-
-  if (op === "CONFIRM" || op === "CANCEL") return ["recorder"];
-  if (op === "END_RACE" || op === "RESET") return ["chief"];
-  if (op === "NEW_CAUTION" || op === "NEW_WARNING") return ["judge"];
-  if (op === "NEW_CHIEF") return ["chiefjudge"];
-  return null;
 }
 
 // =====================================================
@@ -412,162 +239,119 @@ return res.json({
 // =====================================================
 // 設定係：Firebase 保存済み大会一覧
 // =====================================================
-app.post("/api/host/firebase-events", async (req, res) => {
-  try {
-    const token = String(req.body?.token || "");
+app.post(
+  "/api/host/firebase-events",
+  async (req, res) => {
+    try {
+      const token =
+        String(req.body?.token || "");
 
-    const tokens = loadTokens();
+      if (
+        !tokenOkFor(
+          "host",
+          null,
+          token
+        )
+      ) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "設定係の認証に失敗しました",
+        });
+      }
 
-    if (!token || token !== String(tokens.host || "")) {
-      return res.status(401).json({
+      const events =
+        await firebaseStore.getEvents();
+
+      return res.json({
+        success: true,
+        events,
+      });
+
+    } catch (error) {
+      console.error(
+        "FIREBASE EVENTS ERROR",
+        error
+      );
+
+      return res.status(500).json({
         success: false,
-        message: "設定係の認証に失敗しました"
+        message:
+          "Firebaseの大会一覧を取得できませんでした",
       });
     }
-
-    const db = getFirebaseDb();
-
-    const snap =
-      await db.collection("events").get();
-
-    const events = [];
-
-    snap.forEach((doc) => {
-      const data = doc.data() || {};
-
-      events.push({
-        eventId:
-          String(data.eventId || doc.id || ""),
-        note:
-          String(data.note || ""),
-        updatedAt:
-          data.updatedAt || ""
-      });
-    });
-
-    events.sort((a, b) =>
-      String(b.updatedAt || "")
-        .localeCompare(String(a.updatedAt || ""))
-    );
-
-    return res.json({
-      success: true,
-      events
-    });
-
-  } catch (error) {
-    console.error(
-      "FIREBASE EVENTS ERROR",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Firebaseの大会一覧を取得できませんでした"
-    });
   }
-});
+);
 
 
 // =====================================================
 // 設定係：Firebase 大会名簿取得
 // =====================================================
-app.post("/api/host/firebase-roster", async (req, res) => {
-  try {
-    const token =
-      String(req.body?.token || "");
+app.post(
+  "/api/host/firebase-roster",
+  async (req, res) => {
+    try {
+      const token =
+        String(req.body?.token || "");
 
-    const eventId =
-      String(req.body?.eventId || "").trim();
+      const eventId =
+        String(
+          req.body?.eventId || ""
+        ).trim();
 
-    const tokens = loadTokens();
+      if (
+        !tokenOkFor(
+          "host",
+          null,
+          token
+        )
+      ) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "設定係の認証に失敗しました",
+        });
+      }
 
-    if (!token || token !== String(tokens.host || "")) {
-      return res.status(401).json({
-        success: false,
-        message: "設定係の認証に失敗しました"
+      if (!/^\d{10}$/.test(eventId)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "大会IDは10桁の半角数字で指定してください",
+        });
+      }
+
+      const result =
+        await firebaseStore
+          .getEventRoster(eventId);
+
+      if (!result) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "大会が見つかりません",
+        });
+      }
+
+      return res.json({
+        success: true,
+        ...result,
       });
-    }
 
-    if (!/^\d{10}$/.test(eventId)) {
-      return res.status(400).json({
+    } catch (error) {
+      console.error(
+        "FIREBASE ROSTER ERROR",
+        error
+      );
+
+      return res.status(500).json({
         success: false,
         message:
-          "大会IDは10桁の半角数字で指定してください"
+          "Firebaseの名簿を取得できませんでした",
       });
     }
-
-    const db = getFirebaseDb();
-
-    const eventRef =
-      db.collection("events").doc(eventId);
-
-    const eventDoc =
-      await eventRef.get();
-
-    if (!eventDoc.exists) {
-      return res.status(404).json({
-        success: false,
-        message: "大会が見つかりません"
-      });
-    }
-
-    const rosterSnap =
-      await eventRef
-        .collection("roster")
-        .get();
-
-    const roster = [];
-
-    rosterSnap.forEach((doc) => {
-      const data = doc.data() || {};
-
-      roster.push({
-        lane: String(data.lane || doc.id || ""),
-        bib: String(data.bib || ""),
-        name: String(data.name || ""),
-        team: String(data.team || "")
-      });
-    });
-
-    roster.sort(
-      (a, b) =>
-        Number(a.lane) - Number(b.lane)
-    );
-
-    const eventData =
-      eventDoc.data() || {};
-
-    return res.json({
-      success: true,
-
-      event: {
-        eventId:
-          String(
-            eventData.eventId ||
-            eventId
-          ),
-        note:
-          String(eventData.note || "")
-      },
-
-      roster
-    });
-
-  } catch (error) {
-    console.error(
-      "FIREBASE ROSTER ERROR",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Firebaseの名簿を取得できませんでした"
-    });
   }
-});
+);
 // ========================================
 // 管理者ログイン
 // ========================================
