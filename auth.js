@@ -303,10 +303,13 @@ function requiredRole(op) {
     return ["recorder"];
   }
 
-  if (
-    op === "END_RACE" ||
-    op === "RESET"
-  ) {
+    // 競技終了は設定係
+  if (op === "END_RACE") {
+    return ["host"];
+  }
+
+  // 記録主任はログ初期化のみ
+  if (op === "RESET") {
     return ["chief"];
   }
 
