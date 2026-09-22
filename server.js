@@ -175,6 +175,16 @@ async function initializeTokens() {
 // 現在の競技状態を保存
 // -----------------------------------------------------
 async function saveRuntimeToFirebase() {
+
+  const roster =
+    Object.values(state.rosterByLane || {})
+      .map((a) => ({
+        lane: String(a.lane || ""),
+        bib: String(a.bib || ""),
+        name: String(a.name || ""),
+        team: String(a.team || ""),
+      }));
+
   await racewalkSystemRef().set(
     {
       runtime: {
@@ -184,6 +194,9 @@ async function saveRuntimeToFirebase() {
           Number(state.currentGroup || 1),
         raceActive:
           state.raceActive === true,
+
+        // Render再起動時に現在の名簿も復元する
+        roster,
       },
 
       runtimeUpdatedAt:
@@ -192,8 +205,6 @@ async function saveRuntimeToFirebase() {
     { merge: true }
   );
 }
-
-
 // -----------------------------------------------------
 // 現在の競技状態を読込
 // -----------------------------------------------------
@@ -224,23 +235,33 @@ async function loadRuntimeFromFirebase() {
 
     raceActive:
       runtime.raceActive === true,
+
+    roster:
+      Array.isArray(runtime.roster)
+        ? runtime.roster
+        : [],
   };
 }
-
 
 // -----------------------------------------------------
 // 注意・警告・失格・通告を保存
 // -----------------------------------------------------
 async function saveRecordToFirebase(item) {
-  if (!item?.id) {
+
+  if (!item?.id || !item?.raceId) {
     throw new Error(
-      "保存する競技記録にIDがありません"
+      "保存する競技記録のIDまたはraceIdがありません"
     );
   }
 
+  // raceIdを付けることで、
+  // 次の競技のINF-00001による上書きを防ぐ
+  const docId =
+    `${item.raceId}_${item.id}`;
+
   await racewalkSystemRef()
     .collection("records")
-    .doc(String(item.id))
+    .doc(docId)
     .set(
       {
         ...item,
@@ -250,15 +271,23 @@ async function saveRecordToFirebase(item) {
       { merge: true }
     );
 }
-
-
 // -----------------------------------------------------
 // 競技記録をFirebaseから読込
 // -----------------------------------------------------
-async function loadRecordsFromFirebase() {
+async function loadRecordsFromFirebase(raceId) {
+
+  if (!raceId) {
+    return [];
+  }
+
   const snap =
     await racewalkSystemRef()
       .collection("records")
+      .where(
+        "raceId",
+        "==",
+        String(raceId)
+      )
       .get();
 
   const records = [];
@@ -268,7 +297,7 @@ async function loadRecordsFromFirebase() {
 
     records.push({
       ...data,
-      id: String(data.id || doc.id),
+      id: String(data.id || ""),
     });
   });
 
@@ -559,7 +588,138 @@ function applyGroup(group) {
 }
 
 applyGroup(1);
+// =====================================================
+// Firebase：競技状態復元
+// =====================================================
+async function initializeRuntime() {
 
+  const runtime =
+    await loadRuntimeFromFirebase();
+
+  // Firebaseにまだ競技状態が無い場合
+  if (!runtime || !runtime.raceId) {
+
+    await saveRuntimeToFirebase();
+
+    console.log(
+      "競技状態をFirebaseへ初回保存しました"
+    );
+
+    return;
+  }
+
+
+  // ---------------------------------------------------
+  // 基本状態を復元
+  // ---------------------------------------------------
+  state.raceId =
+    String(runtime.raceId);
+
+  state.seq =
+    Math.max(
+      1,
+      Number(runtime.seq || 1)
+    );
+
+  state.currentGroup =
+    safeGroup(runtime.currentGroup);
+
+  state.raceActive =
+    runtime.raceActive === true;
+
+
+  // ---------------------------------------------------
+  // 現在の名簿を復元
+  // ---------------------------------------------------
+  const rosterMap = {};
+
+  for (const a of runtime.roster || []) {
+
+    const lane =
+      String(a.lane || "").trim();
+
+    const name =
+      String(a.name || "").trim();
+
+    if (!lane || !name) continue;
+    if (!isHalfWidthDigits(lane)) continue;
+
+    rosterMap[lane] = {
+      lane,
+      bib: String(a.bib || ""),
+      name,
+      team: String(a.team || ""),
+    };
+  }
+
+  state.rosterByLane = rosterMap;
+
+
+  // ---------------------------------------------------
+  // 現在の競技記録を復元
+  // ---------------------------------------------------
+  const records =
+    await loadRecordsFromFirebase(
+      state.raceId
+    );
+
+  state.byId = {};
+  state.activeKeyToId = {};
+  state.judgeLaneWarnLock = {};
+
+
+  for (const inf of records) {
+
+    if (!inf?.id) continue;
+
+    state.byId[inf.id] = inf;
+
+
+    // 取消済みは重複防止対象にしない
+    if (inf.status === "cancelled") {
+      continue;
+    }
+
+
+    const k =
+      keyOf(
+        inf.raceId,
+        inf.judgeId,
+        inf.lane,
+        inf.type,
+        inf.level
+      );
+
+    state.activeKeyToId[k] =
+      inf.id;
+
+
+    // 有効な警告なら警告ロックも復元
+    if (
+      inf.level === "warning" &&
+      inf.judgeId &&
+      inf.lane
+    ) {
+      const lk =
+        lockKey(
+          inf.raceId,
+          inf.judgeId,
+          inf.lane
+        );
+
+      state.judgeLaneWarnLock[lk] =
+        true;
+    }
+  }
+
+
+  console.log(
+    `競技状態をFirebaseから復元しました：` +
+    `グループ${state.currentGroup} / ` +
+    `${state.raceActive ? "競技中" : "停止中"} / ` +
+    `記録${records.length}件`
+  );
+}
 // =====================================================
 // WebSocket helpers
 // =====================================================
@@ -1026,8 +1186,11 @@ wss.on("connection", (ws) => {
         );
       }
 
-      applyGroup(g);
+            applyGroup(g);
       state.raceActive = true;
+
+      // 競技開始状態・グループ・名簿をFirebase保存
+      await saveRuntimeToFirebase();
 
       broadcast({
         op: "EVENT",
@@ -1059,7 +1222,10 @@ wss.on("connection", (ws) => {
         return reject(ws, "現在、競技中のグループはありません");
       }
 
-      state.raceActive = false;
+            state.raceActive = false;
+
+      // 競技終了状態をFirebase保存
+      await saveRuntimeToFirebase();
 
       broadcast({
         op: "EVENT",
@@ -1145,9 +1311,20 @@ send(ws, {
       const inf = state.byId[id];
       if (!inf) return;
 
-      inf.status = "confirmed";
-      broadcast({ op: "EVENT", kind: "UPDATE", item: inf });
-      return;
+        inf.status = "confirmed";
+
+      await saveRecordToFirebase(inf);
+
+  // 取消状態をFirebaseへ保存
+  await saveRecordToFirebase(inf);
+
+  broadcast({
+    op: "EVENT",
+    kind: "UPDATE",
+    item: inf
+  });
+
+  return;
     }
 if (op === "CANCEL") {
   const id = String(msg.id || "");
@@ -1198,7 +1375,9 @@ if (op === "CANCEL") {
         );
       }
 
-      resetLogKeepRoster();
+            resetLogKeepRoster();
+
+      await saveRuntimeToFirebase();
 
       broadcast({
         op: "EVENT",
@@ -1253,11 +1432,21 @@ if (op === "CANCEL") {
       state.byId[inf.id] = inf;
       state.activeKeyToId[kThis] = inf.id;
 
-      if (level === "warning") {
+            if (level === "warning") {
         state.judgeLaneWarnLock[lk] = true;
       }
 
-      broadcast({ op: "EVENT", kind: "NEW", item: inf });
+      // 注意・警告をFirebaseへ保存
+      await saveRecordToFirebase(inf);
+
+      // seqも保存
+      await saveRuntimeToFirebase();
+
+      broadcast({
+        op: "EVENT",
+        kind: "NEW",
+        item: inf
+      });
       return;
     }
 
@@ -1287,8 +1476,19 @@ if (op === "CANCEL") {
         status: ctype === "notice" ? "confirmed" : "pending",
       };
 
-      state.byId[inf.id] = inf;
-      broadcast({ op: "EVENT", kind: "NEW", item: inf });
+            state.byId[inf.id] = inf;
+
+      await saveRecordToFirebase(inf);
+
+      // seqをFirebaseへ保存
+      await saveRuntimeToFirebase();
+
+      broadcast({
+        op: "EVENT",
+        kind: "NEW",
+        item: inf
+      });
+
       return;
     }
   });
@@ -1308,9 +1508,12 @@ async function startServer() {
 
   try {
 
-    // Webサーバーを公開する前に
+        // Webサーバーを公開する前に
     // Firebaseから当日トークンを復元
     await initializeTokens();
+
+    // 現在の競技状態・名簿・記録を復元
+    await initializeRuntime();
 
     server.listen(
       PORT,
