@@ -1765,19 +1765,7 @@ function hostView() {
       </div>
 
 
-    <div class="card">
-      <details>
-        <summary class="big" style="cursor:pointer;">当日の名簿変更・修正</summary>
 
-        <div class="row" style="margin-top:10px;">
-          <input id="hLane" placeholder="レーン" style="width:120px" value="${esc(hostForm?.lane || "")}">
-          <input id="hBib" placeholder="競技者番号（英数字）" style="min-width:220px;flex:1" value="${esc(hostForm?.bib || "")}">
-          <input id="hName" placeholder="氏名（必須）" style="min-width:200px;flex:1" value="${esc(hostForm?.name || "")}">
-          <input id="hTeam" placeholder="所属（任意）" style="min-width:200px;flex:1" value="${esc(hostForm?.team || "")}">
-          <button id="upsertBtn">追加/更新</button>
-        </div>
-      </details>
-    </div>
     <div id="firebaseMount"></div>
     <div class="card">
       <details open>
@@ -1827,7 +1815,19 @@ function hostView() {
         </table>
       </details>
     </div>
+    <div class="card">
+      <details>
+        <summary class="big" style="cursor:pointer;">当日の名簿変更・修正</summary>
 
+        <div class="row" style="margin-top:10px;">
+          <input id="hLane" placeholder="レーン" style="width:120px" value="${esc(hostForm?.lane || "")}">
+          <input id="hBib" placeholder="競技者番号（英数字）" style="min-width:220px;flex:1" value="${esc(hostForm?.bib || "")}">
+          <input id="hName" placeholder="氏名（必須）" style="min-width:200px;flex:1" value="${esc(hostForm?.name || "")}">
+          <input id="hTeam" placeholder="所属（任意）" style="min-width:200px;flex:1" value="${esc(hostForm?.team || "")}">
+          <button id="upsertBtn">追加/更新</button>
+        </div>
+      </details>
+    </div>
     ${tokenTableHtml()}
     ${qrCardsHtml()}
   `);
