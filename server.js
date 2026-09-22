@@ -365,27 +365,63 @@ function mergeWithDefaults(obj) {
 // Token auth (tokens.json)
 // host は固定、他は保存型
 // =====================================================
-function loadTokens() {
+// -----------------------------------------------------
+// 旧tokens.json読込
+// Firebaseへの初回移行時だけ使用
+// -----------------------------------------------------
+function loadTokensFromLocalFile() {
+
   if (!fs.existsSync(TOKENS_FILE)) {
-    const initial = defaultTokens();
-    fs.writeFileSync(TOKENS_FILE, JSON.stringify(initial, null, 2), "utf8");
-    return initial;
+    return defaultTokens();
   }
 
   try {
-    const v = JSON.parse(fs.readFileSync(TOKENS_FILE, "utf8"));
-    const merged = mergeWithDefaults(v);
-    fs.writeFileSync(TOKENS_FILE, JSON.stringify(merged, null, 2), "utf8");
-    return merged;
+    const v =
+      JSON.parse(
+        fs.readFileSync(
+          TOKENS_FILE,
+          "utf8"
+        )
+      );
+
+    return mergeWithDefaults(v);
+
   } catch {
-    const initial = defaultTokens();
-    fs.writeFileSync(TOKENS_FILE, JSON.stringify(initial, null, 2), "utf8");
-    return initial;
+    return defaultTokens();
   }
 }
 
-function saveTokens(tokens) {
-  fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2), "utf8");
+
+// -----------------------------------------------------
+// 現在のトークン取得
+// 通常処理はメモリキャッシュを使用
+// -----------------------------------------------------
+function loadTokens() {
+
+  if (tokenCache) {
+    return tokenCache;
+  }
+
+  // Firebase初期化前だけの安全策
+  return loadTokensFromLocalFile();
+}
+
+
+// -----------------------------------------------------
+// トークン更新
+// メモリ + Firebase
+// -----------------------------------------------------
+async function saveTokens(tokens) {
+
+  tokenCache = {
+    ...tokens
+  };
+
+  await saveTokensToFirebase(
+    tokenCache
+  );
+
+  return tokenCache;
 }
 
 function judgeIdToRole(judgeId) {
@@ -837,7 +873,7 @@ return res.json({
 // ========================================
 // 管理者：設定係トークン更新
 // ========================================
-app.post("/api/admin/regen-host-token", (req, res) => {
+app.post("/api/admin/regen-host-token", async (req, res) => {
   try {
     const token = String(req.body?.token || "");
 
@@ -852,9 +888,9 @@ app.post("/api/admin/regen-host-token", (req, res) => {
     const tokens = loadTokens();
 
     // 設定係トークンを新しくする
-    tokens.host = "rw_HOST_" + makeToken();
+    tokens.host ="rw_HOST_" + makeToken();
 
-    saveTokens(tokens);
+await saveTokens(tokens);
 
     return res.json({
       success: true,
@@ -894,7 +930,7 @@ wss.on("connection", (ws) => {
   let judgeId = null;
   let authed = false;
 
-  ws.on("message", (buf) => {
+  ws.on("message", async (buf) => {
     let msg;
     try {
       msg = JSON.parse(buf.toString("utf8"));
@@ -1064,7 +1100,7 @@ wss.on("connection", (ws) => {
 
       const tokens = loadTokens();
       tokens[target] = makeToken();
-      saveTokens(tokens);
+　　　await saveTokens(tokens);
 
       send(ws, {
         op: "OK",
@@ -1090,13 +1126,13 @@ wss.on("connection", (ws) => {
   tokens.recorder = makeToken();
   tokens.chief = makeToken();
 
-  saveTokens(tokens);
+await saveTokens(tokens);
 
-  send(ws, {
-    op: "OK",
-    kind: "REGEN_ALL_TOKENS",
-    tokens,
-  });
+send(ws, {
+  op: "OK",
+  kind: "REGEN_ALL_TOKENS",
+  tokens,
+});
 
   return;
 }
@@ -1265,25 +1301,41 @@ if (op === "CANCEL") {
 // =====================================================
 // Listen
 // =====================================================
-server.listen(PORT, "0.0.0.0", () => {
-  const ips = localIPv4Candidates();
-  const tokens = loadTokens();
+// =====================================================
+// Startup
+// =====================================================
+async function startServer() {
 
-  console.log(`Racewalk Web Host running: http://0.0.0.0:${PORT}`);
+  try {
 
-  if (ips.length) {
-    const ip = ips[0];
-    console.log(`Judge1:       http://${ip}:${PORT}/#/judge?jid=J1&t=${tokens.judge1}`);
-    console.log(`Judge2:       http://${ip}:${PORT}/#/judge?jid=J2&t=${tokens.judge2}`);
-    console.log(`Judge3:       http://${ip}:${PORT}/#/judge?jid=J3&t=${tokens.judge3}`);
-    console.log(`Judge4:       http://${ip}:${PORT}/#/judge?jid=J4&t=${tokens.judge4}`);
-    console.log(`Judge5:       http://${ip}:${PORT}/#/judge?jid=J5&t=${tokens.judge5}`);
-    console.log(`ChiefJudge:   http://${ip}:${PORT}/#/chiefjudge?t=${tokens.chiefjudge}`);
-    console.log(`Recorder:     http://${ip}:${PORT}/#/recorder?t=${tokens.recorder}`);
-    console.log(`Chief(Reset): http://${ip}:${PORT}/#/chief?t=${tokens.chief}`);
-    console.log(`Board:        http://${ip}:${PORT}/#/board`);
-    console.log(`Host(PC):     http://${ip}:${PORT}/#/host?t=${FIXED_TOKENS.host}`);
+    // Webサーバーを公開する前に
+    // Firebaseから当日トークンを復元
+    await initializeTokens();
+
+    server.listen(
+      PORT,
+      "0.0.0.0",
+      () => {
+
+        console.log(
+          `Racewalk Web Host running on port ${PORT}`
+        );
+
+        console.log(
+          "当日トークン：Firebase永続化 有効"
+        );
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "SERVER START ERROR",
+      error
+    );
+
+    process.exit(1);
   }
+}
 
-  console.log(`WS: ws://<PC-IP>:${PORT}/ws`);
-});
+startServer();
