@@ -777,7 +777,6 @@ function renderSavedEventsList() {
     location.hash.startsWith("#/host");
 
   // 管理者だけFirebaseログインが必要
-  // 設定係はRenderサーバー経由なのでログイン不要
   if (!isHost && !auth.currentUser) {
     el.innerHTML = "未ログイン";
 
@@ -789,12 +788,21 @@ function renderSavedEventsList() {
   }
 
   if (!savedEventsCache.length) {
-    el.innerHTML = "保存済みデータはありません";
-    if (moreBtn) moreBtn.style.display = "none";
+    el.innerHTML =
+      "保存済みデータはありません";
+
+    if (moreBtn) {
+      moreBtn.style.display = "none";
+    }
+
     return;
   }
 
-  const list = savedEventsCache.slice(0, savedEventsVisibleCount);
+  const list =
+    savedEventsCache.slice(
+      0,
+      savedEventsVisibleCount
+    );
 
   el.innerHTML = `
     <table>
@@ -806,12 +814,22 @@ function renderSavedEventsList() {
           <th>操作</th>
         </tr>
       </thead>
+
       <tbody>
         ${list.map(x => `
           <tr>
             <td>${safe(x.eventId)}</td>
             <td>${safe(x.note || "")}</td>
-            <td>${x.updatedAt ? new Date(x.updatedAt).toLocaleString("ja-JP") : ""}</td>
+            <td>
+              ${
+                x.updatedAt
+                  ? new Date(
+                      x.updatedAt
+                    ).toLocaleString("ja-JP")
+                  : ""
+              }
+            </td>
+
             <td>
               <button
                 type="button"
@@ -829,7 +847,11 @@ function renderSavedEventsList() {
   `;
 
   if (moreBtn) {
-    moreBtn.style.display = savedEventsVisibleCount < savedEventsCache.length ? "" : "none";
+    moreBtn.style.display =
+      savedEventsVisibleCount <
+      savedEventsCache.length
+        ? ""
+        : "none";
   }
 
   bindEvents();
