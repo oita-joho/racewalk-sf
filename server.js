@@ -27,6 +27,10 @@ const {
   initializeTokens,
   loadTokens,
   saveTokens,
+
+  setHostPasscode,
+  verifyHostPasscode,
+
   tokenOkFor,
   requiredRole,
 } = auth;
@@ -43,8 +47,7 @@ const {
 // Config / Files
 // =====================================================
 const PORT = process.env.PORT || 8080;
-const HOST_PASSCODE = process.env.HOST_PASSCODE || "";
-const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "";
+const ADMIN_PASSCODE =process.env.ADMIN_PASSCODE || "";
 const DATA_DIR = path.join(__dirname, "data");
 const ROSTER_FILE = (g) => path.join(DATA_DIR, `roster_g${g}.json`);
 
@@ -211,30 +214,50 @@ app.get("/api/time", (req, res) => {
 // =====================================================
 app.use(express.json());
 
-app.post("/api/host-login", (req, res) => {
-  const passcode = String(req.body?.passcode || "");
+app.post(
+  "/api/host-login",
+  async (req, res) => {
+    try {
+      const passcode =
+        String(
+          req.body?.passcode || ""
+        );
 
-  if (!HOST_PASSCODE) {
-    return res.status(500).json({
-      success: false,
-      message: "設定係パスコードがサーバーに設定されていません"
-    });
+      const ok =
+        await verifyHostPasscode(
+          passcode
+        );
+
+      if (!ok) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "設定係パスコードが違います",
+        });
+      }
+
+      const tokens =
+        loadTokens();
+
+      return res.json({
+        success: true,
+        token: tokens.host,
+      });
+
+    } catch (error) {
+      console.error(
+        "HOST LOGIN ERROR",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "設定係ログイン処理でエラーが発生しました",
+      });
+    }
   }
-
-  if (passcode !== HOST_PASSCODE) {
-    return res.status(401).json({
-      success: false,
-      message: "パスコードが違います"
-    });
-  }
-
-  const tokens = loadTokens();
-
-return res.json({
-  success: true,
-  token: tokens.host
-});
-});
+);
 // =====================================================
 // 設定係：Firebase 保存済み大会一覧
 // =====================================================
@@ -388,6 +411,73 @@ return res.json({
     });
   }
 });   
+// =====================================================
+// 管理者：設定係パスコード変更
+// =====================================================
+app.post(
+  "/api/admin/host-passcode",
+  async (req, res) => {
+    try {
+      const token =
+        String(
+          req.body?.token || ""
+        );
+
+      const newPasscode =
+        String(
+          req.body?.passcode || ""
+        ).trim();
+
+
+      // 管理者認証
+      if (
+        !adminToken ||
+        token !== adminToken
+      ) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "管理者認証が必要です",
+        });
+      }
+
+
+      // パスコード確認
+      if (newPasscode.length < 4) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "設定係パスコードは4文字以上にしてください",
+        });
+      }
+
+
+      // Firebaseへハッシュ保存
+      await setHostPasscode(
+        newPasscode
+      );
+
+
+      return res.json({
+        success: true,
+        message:
+          "設定係パスコードを変更しました",
+      });
+
+    } catch (error) {
+      console.error(
+        "HOST PASSCODE UPDATE ERROR",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "設定係パスコードを変更できませんでした",
+      });
+    }
+  }
+);
 // ========================================
 // 管理者：設定係トークン更新
 // ========================================
