@@ -1558,26 +1558,20 @@ const chiefTools = isChief ? `
   <div class="card">
     <div class="row" style="align-items:center;gap:12px;">
       ${
-        raceActive
-          ? `
-              <span class="alert">
-                🔴 グループ${esc(currentGroup)} 競技中
-              </span>
-            `
-          : `
-              <span class="ok">
-                ⚪ 現在、競技中のグループはありません
-              </span>
-            `
-      }
-
-      <button
-        id="resetBtn"
-        class="danger"
-        ${raceActive ? "disabled" : ""}
-      >
+raceActive
+  ? `
+      <span class="alert">
+        🔴 グループ${esc(currentGroup)} 競技中
+      </span>
+    `
+  : `
+      <span class="ok">
+        ⚪ 現在、競技中のグループはありません
+      </span>
+      <button id="resetBtn" class="danger">
         ログ初期化
       </button>
+    `
     </div>
 
     ${
