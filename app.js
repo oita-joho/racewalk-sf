@@ -368,9 +368,6 @@ let hostRosterCache = [];
 let hostForm = { lane: "", bib: "", name: "", team: "" };
 let hostDirty = false;
 let serverClockOffset = 0;
-let firebaseEnabled = true;
-let csvEnabled = true;
-let firebaseLoggedIn = false;
 
 // ===== sound =====
 let soundEnabled = false;
@@ -2402,9 +2399,6 @@ if (endRaceBtn) {
     const hTeam = $("#hTeam");
     const upsertBtn = $("#upsertBtn");
 
-    const csvImportBtn = $("#csvImportBtn");
-    const csvImportSaveBtn = $("#csvImportSaveBtn");
-
     if (groupSelect) groupSelect.value = String(hostSelectedGroup);
 
     if (hLane) hLane.value = hostForm.lane;
@@ -2430,48 +2424,6 @@ if (endRaceBtn) {
     if (hName) hName.addEventListener("input", () => (hostForm.name = hName.value));
     if (hTeam) hTeam.addEventListener("input", () => (hostForm.team = hTeam.value));
 
-    async function readCsvFileAsText(file, enc = "utf-8") {
-      const buf = await file.arrayBuffer();
-      try {
-        return new TextDecoder(enc).decode(buf);
-      } catch {
-        return new TextDecoder("utf-8").decode(buf);
-      }
-    }
-
-    async function importCsv(doSave = false) {
-      const csvFile = $("#csvFile");
-      const csvEnc = $("#csvEnc");
-
-      if (!csvFile || !csvFile.files || !csvFile.files[0]) {
-        alert("CSVファイルを選択してください");
-        return;
-      }
-
-      const file = csvFile.files[0];
-      const enc = (csvEnc && csvEnc.value) ? csvEnc.value : "utf-8";
-
-      const text = await readCsvFileAsText(file, enc);
-      const rows = parseCsv(text);
-      const roster = csvRowsToRoster(rows);
-
-      if (!roster.length) {
-        alert("有効な行がありませんでした（lane,name 必須 / レーンは半角数字）");
-        return;
-      }
-
-      hostRosterCache = roster;
-      hostDirty = true;
-      render();
-      alert("読み込みました。修正後にFirebase保存してください。");
-      if (doSave) {
-        send({ op: "SAVE_ROSTER", group: hostSelectedGroup, roster: hostRosterCache });
-        hostDirty = false;
-        alert(`グループ${hostSelectedGroup} を保存しました`);
-      } else {
-        alert(`CSVを読み込みました：${roster.length}名`);
-      }
-    }
 
     if (loadBtn) {
       loadBtn.addEventListener("click", () => {
@@ -2556,9 +2508,7 @@ if (endRaceBtn) {
 
 document.querySelectorAll("[data-edit-lane]").forEach((btn) => {
   btn.onclick = () => {
-    alert("編集を押しました");
-
-    const lane = btn.getAttribute("data-edit-lane");
+  const lane = btn.getAttribute("data-edit-lane");
     const row = hostRosterCache.find((x) => String(x.lane) === String(lane));
     if (!row) return;
 
@@ -2589,26 +2539,6 @@ document.querySelectorAll("[data-del-lane]").forEach((btn) => {
     render();
   };
 });
-    if (csvImportBtn) csvImportBtn.addEventListener("click", () => importCsv(false));
-
-
-// ===== Firebase / CSV ON-OFF ボタン =====
-const fbBtn = document.getElementById("toggleFirebaseBtn");
-if (fbBtn) {
-  fbBtn.onclick = () => {
-    firebaseEnabled = !firebaseEnabled;
-    render();
-  };
-}
-
-const csvBtn = document.getElementById("toggleCsvBtn");
-if (csvBtn) {
-  csvBtn.onclick = () => {
-    csvEnabled = !csvEnabled;
-    render();
-  };
-}
-
     
   }
 
@@ -2863,13 +2793,7 @@ if (
 setInterval(() => {
   fetch("/api/time").catch(() => {});
 }, 5 * 60 * 1000);
-window.setFirebaseLoginState = function (loggedIn) {
-  firebaseLoggedIn = !!loggedIn;
-  if (firebaseLoggedIn) {
-    firebaseEnabled = true;
-  }
-  render();
-};
+
 // ===== Firebase管理者用 CSV変換 =====
 window.parseRosterCsvForFirebase = function (text) {
   const rows = parseCsv(text);
