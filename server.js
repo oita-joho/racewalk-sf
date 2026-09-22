@@ -10,7 +10,18 @@ const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 const firebaseStore = require("./firebase-store");
+const raceState = require("./race-state");
 
+const {
+  state,
+  safeGroup,
+  nextId,
+  keyOf,
+  lockKey,
+  ensureLaneRegistered,
+  resetLogKeepRoster,
+  initializeRuntime,
+} = raceState;
 // =====================================================
 // Firebase Store
 // =====================================================
@@ -77,10 +88,7 @@ const FIXED_TOKENS = {
 // =====================================================
 // Utilities
 // =====================================================
-function safeGroup(g) {
-  const n = parseInt(g, 10);
-  return [1, 2, 3, 4, 5].includes(n) ? n : 1;
-}
+
 
 function isHalfWidthDigits(s) {
   return /^\d+$/.test(String(s ?? "").trim());
@@ -271,202 +279,22 @@ function writeRoster(group, roster) {
   fs.writeFileSync(f, JSON.stringify(roster, null, 2), "utf8");
 }
 
-// =====================================================
-// Runtime State
-// =====================================================
-const state = {
-  raceId: String(Date.now()),
-  seq: 1,
-  currentGroup: 1,
-  raceActive: false,
-  rosterByLane: {},
-  byId: {},
-  activeKeyToId: {},
-  judgeLaneWarnLock: {},
-  clients: new Set(),
-};
 
-function nextId() {
-  return `INF-${String(state.seq++).padStart(5, "0")}`;
-}
-
-function keyOf(raceId, judgeId, lane, type, level) {
-  return `${raceId}|${judgeId}|${lane}|${type}|${level}`;
-}
-
-function lockKey(raceId, judgeId, lane) {
-  return `${raceId}|${judgeId}|${lane}`;
-}
-
-function ensureLaneRegistered(lane) {
-  return !!state.rosterByLane[String(lane)];
-}
-
-function resetLogKeepRoster() {
-  state.raceId = String(Date.now());
-  state.seq = 1;
-  state.byId = {};
-  state.activeKeyToId = {};
-  state.judgeLaneWarnLock = {};
-}
 
 function applyGroup(group) {
-  const g = safeGroup(group);
-  state.currentGroup = g;
+  const g =
+    safeGroup(group);
 
-  const roster = readRoster(g);
-  const map = {};
-  for (const a of roster) {
-    const lane = String(a.lane || "").trim();
-    const name = String(a.name || "").trim();
-    if (!lane || !name) continue;
-    if (!isHalfWidthDigits(lane)) continue;
+  const roster =
+    readRoster(g);
 
-    map[lane] = {
-      lane,
-      bib: String(a.bib || ""),
-      name,
-      team: String(a.team || ""),
-    };
-  }
-  state.rosterByLane = map;
-
-  resetLogKeepRoster();
-}
-
-applyGroup(1);
-// =====================================================
-// Firebase：競技状態復元
-// =====================================================
-async function initializeRuntime() {
-
-  const runtime =
-    await loadRuntimeFromFirebase();
-
-  // Firebaseにまだ競技状態が無い場合
-  if (!runtime || !runtime.raceId) {
-
-    await saveRuntimeToFirebase(state);
-
-    console.log(
-      "競技状態をFirebaseへ初回保存しました"
-    );
-
-    return;
-  }
-
-
-  // ---------------------------------------------------
-  // 基本状態を復元
-  // ---------------------------------------------------
-  state.raceId =
-    String(runtime.raceId);
-
-  state.seq =
-    Math.max(
-      1,
-      Number(runtime.seq || 1)
-    );
-
-  state.currentGroup =
-    safeGroup(runtime.currentGroup);
-
-  state.raceActive =
-    runtime.raceActive === true;
-
-
-  // ---------------------------------------------------
-  // 現在の名簿を復元
-  // ---------------------------------------------------
-  const rosterMap = {};
-
-  for (const a of runtime.roster || []) {
-
-    const lane =
-      String(a.lane || "").trim();
-
-    const name =
-      String(a.name || "").trim();
-
-    if (!lane || !name) continue;
-    if (!isHalfWidthDigits(lane)) continue;
-
-    rosterMap[lane] = {
-      lane,
-      bib: String(a.bib || ""),
-      name,
-      team: String(a.team || ""),
-    };
-  }
-
-  state.rosterByLane = rosterMap;
-
-
-  // ---------------------------------------------------
-  // 現在の競技記録を復元
-  // ---------------------------------------------------
-  const records =
-    await loadRecordsFromFirebase(
-      state.raceId
-    );
-
-  state.byId = {};
-  state.activeKeyToId = {};
-  state.judgeLaneWarnLock = {};
-
-
-  for (const inf of records) {
-
-    if (!inf?.id) continue;
-
-    state.byId[inf.id] = inf;
-
-
-    // 取消済みは重複防止対象にしない
-    if (inf.status === "cancelled") {
-      continue;
-    }
-
-
-    const k =
-      keyOf(
-        inf.raceId,
-        inf.judgeId,
-        inf.lane,
-        inf.type,
-        inf.level
-      );
-
-    state.activeKeyToId[k] =
-      inf.id;
-
-
-    // 有効な警告なら警告ロックも復元
-    if (
-      inf.level === "warning" &&
-      inf.judgeId &&
-      inf.lane
-    ) {
-      const lk =
-        lockKey(
-          inf.raceId,
-          inf.judgeId,
-          inf.lane
-        );
-
-      state.judgeLaneWarnLock[lk] =
-        true;
-    }
-  }
-
-
-  console.log(
-    `競技状態をFirebaseから復元しました：` +
-    `グループ${state.currentGroup} / ` +
-    `${state.raceActive ? "競技中" : "停止中"} / ` +
-    `記録${records.length}件`
+  raceState.applyGroup(
+    g,
+    roster
   );
 }
+
+
 // =====================================================
 // WebSocket helpers
 // =====================================================
