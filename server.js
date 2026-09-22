@@ -34,7 +34,6 @@ const {
 // Firebase Store
 // =====================================================
 const {
-  getFirebaseDb,
   saveRuntime: saveRuntimeToFirebase,
   saveRecord: saveRecordToFirebase,
 } = firebaseStore;
