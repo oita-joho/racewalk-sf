@@ -1740,7 +1740,23 @@ function hostView() {
   const list = Array.isArray(hostRosterCache)
     ? hostRosterCache.slice().sort((a, b) => (parseInt(a.lane, 10) || 0) - (parseInt(b.lane, 10) || 0))
     : [];
+  // 現在、実際に競技で使用している名簿
+  const activeRoster = Object.values(rosterByLane || {})
+    .slice()
+    .sort(
+      (a, b) =>
+        (parseInt(a.lane, 10) || 0) -
+        (parseInt(b.lane, 10) || 0)
+    );
 
+  const activeRosterRows = activeRoster.map(a => `
+    <tr>
+      <td>${esc(a.lane || "")}</td>
+      <td>${esc(a.bib || "")}</td>
+      <td>${esc(a.name || "")}</td>
+      <td>${esc(a.team || "")}</td>
+    </tr>
+  `).join("");
   const rows = list.map(a => `
     <tr>
       <td>${esc(a.lane || "")}</td>
@@ -1776,6 +1792,40 @@ function hostView() {
               : `⚪ 現在、競技中のグループはありません`
           }
         </div>
+
+        ${
+          raceActive
+            ? `
+                <details style="margin-top:10px;">
+                  <summary class="big" style="cursor:pointer;">
+                    現在の競技名簿（${activeRoster.length}名）
+                  </summary>
+
+                  <table style="margin-top:10px;">
+                    <thead>
+                      <tr>
+                        <th>レーン</th>
+                        <th>競技者番号</th>
+                        <th>氏名</th>
+                        <th>所属</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      ${
+                        activeRosterRows ||
+                        `<tr>
+                          <td colspan="4">
+                            現在の競技名簿を取得できません。
+                          </td>
+                        </tr>`
+                      }
+                    </tbody>
+                  </table>
+                </details>
+              `
+            : ""
+        }
 
         <div class="row" style="margin-top:10px;">
           <select id="groupSelect" style="min-width:200px" ${raceActive ? "disabled" : ""}>
