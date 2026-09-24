@@ -367,6 +367,11 @@ let hostSelectedGroup = 1;
 let hostRosterCache = [];
 let hostForm = { lane: "", bib: "", name: "", team: "" };
 let hostDirty = false;
+
+// 編集中の元レーン。
+// 新規追加の場合は空文字。
+let hostEditingLane = "";
+
 let serverClockOffset = 0;
 
 // ===== sound =====
@@ -2530,47 +2535,93 @@ if (groupSelect) {
       });
     }
 
-    if (upsertBtn) {
-      upsertBtn.addEventListener("click", () => {
-        const lane = String(hLane?.value || "").trim();
-        const bib = String(hBib?.value || "");
-        const name = String(hName?.value || "").trim();
-        const team = String(hTeam?.value || "");
+if (upsertBtn) {
+  upsertBtn.addEventListener("click", () => {
+    const lane = String(hLane?.value || "").trim();
+    const bib = String(hBib?.value || "");
+    const name = String(hName?.value || "").trim();
+    const team = String(hTeam?.value || "");
 
-        if (!lane || !name) {
-          alert("レーンと氏名は必須です");
-          return;
-        }
-        if (!/^\d+$/.test(lane)) {
-          alert("レーンは半角数字です");
-          return;
-        }
-
-        const idx = hostRosterCache.findIndex((x) => String(x.lane) === lane);
-        const row = { lane, bib, name, team };
-        if (idx >= 0) hostRosterCache[idx] = row;
-        else hostRosterCache.push(row);
-
-        hostDirty = true;
-        hostForm = { lane: "", bib: "", name: "", team: "" };
-        render();
-      });
+    if (!lane || !name) {
+      alert("レーンと氏名は必須です");
+      return;
     }
 
+    if (!/^\d+$/.test(lane)) {
+      alert("レーンは半角数字です");
+      return;
+    }
+
+    const row = {
+      lane,
+      bib,
+      name,
+      team,
+    };
+
+    if (hostEditingLane) {
+      // 編集中の元データを置き換える
+      const idx = hostRosterCache.findIndex(
+        (x) =>
+          String(x.lane) ===
+          String(hostEditingLane)
+      );
+
+      if (idx >= 0) {
+        hostRosterCache[idx] = row;
+      } else {
+        hostRosterCache.push(row);
+      }
+    } else {
+      // 新規追加
+      const idx = hostRosterCache.findIndex(
+        (x) => String(x.lane) === lane
+      );
+
+      if (idx >= 0) {
+        if (
+          !confirm(
+            `レーン${lane}は既に登録されています。上書きしますか？`
+          )
+        ) {
+          return;
+        }
+
+        hostRosterCache[idx] = row;
+      } else {
+        hostRosterCache.push(row);
+      }
+    }
+
+    hostDirty = true;
+    hostEditingLane = "";
+    hostForm = {
+      lane: "",
+      bib: "",
+      name: "",
+      team: "",
+    };
+
+    render();
+  });
+}
 document.querySelectorAll("[data-edit-lane]").forEach((btn) => {
   btn.onclick = () => {
   const lane = btn.getAttribute("data-edit-lane");
     const row = hostRosterCache.find((x) => String(x.lane) === String(lane));
     if (!row) return;
 
-    hostForm = {
-      lane: String(row.lane || ""),
-      bib: String(row.bib || ""),
-      name: String(row.name || ""),
-      team: String(row.team || ""),
-    };
+hostEditingLane =
+  String(row.lane || "");
 
-    render();
+hostForm = {
+  lane: String(row.lane || ""),
+  bib: String(row.bib || ""),
+  name: String(row.name || ""),
+  team: String(row.team || ""),
+};
+
+render();
 
     setTimeout(() => {
       const details = document.querySelector("#hLane")?.closest("details");
