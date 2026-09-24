@@ -2,7 +2,6 @@
 // Node: express + ws
 // Run: node server.js
 
-const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const crypto = require("crypto");
@@ -42,18 +41,15 @@ const {
   saveRecord: saveRecordToFirebase,
 } = firebaseStore;
 
-
 // =====================================================
-// Config / Files
+// Config
 // =====================================================
 const PORT = process.env.PORT || 8080;
-const ADMIN_PASSCODE =process.env.ADMIN_PASSCODE || "";
-const DATA_DIR = path.join(__dirname, "data");
-const ROSTER_FILE = (g) => path.join(DATA_DIR, `roster_g${g}.json`);
+const ADMIN_PASSCODE =
+  process.env.ADMIN_PASSCODE || "";
 
 let adminToken = "";
 
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 // =====================================================
 // Utilities
@@ -88,26 +84,6 @@ function localIPv4Candidates() {
   }
   return out;
 }
-
-// =====================================================
-// Roster IO
-// =====================================================
-function readRoster(group) {
-  const f = ROSTER_FILE(group);
-  if (!fs.existsSync(f)) return [];
-  try {
-    const v = JSON.parse(fs.readFileSync(f, "utf8"));
-    return Array.isArray(v) ? v : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeRoster(group, roster) {
-  const f = ROSTER_FILE(group);
-  fs.writeFileSync(f, JSON.stringify(roster, null, 2), "utf8");
-}
-
 
 
 async function applyGroup(group) {
