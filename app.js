@@ -1922,39 +1922,117 @@ function hostView() {
       </details>
     </div>
 
-        <div class="card">
-      <details>
-        <summary class="big" style="cursor:pointer;">編集名簿（${list.length}名）</summary>
-
-        <table style="margin-top:10px;">
-          <thead>
-            <tr>
-              <th>レーン</th>
-              <th>競技者番号</th>
-              <th>氏名</th>
-              <th>所属</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows || `<tr><td colspan="5">名簿はまだありません。</td></tr>`}
-          </tbody>
-        </table>
-      </details>
-    </div>
     <div class="card">
-      <details>
-        <summary class="big" style="cursor:pointer;">当日の名簿変更・修正</summary>
+  <details open>
+    <summary class="big" style="cursor:pointer;">
+      編集名簿（${list.length}名）
+    </summary>
 
-        <div class="row" style="margin-top:10px;">
-          <input id="hLane" placeholder="レーン" style="width:120px" value="${esc(hostForm?.lane || "")}">
-          <input id="hBib" placeholder="競技者番号（英数字）" style="min-width:220px;flex:1" value="${esc(hostForm?.bib || "")}">
-          <input id="hName" placeholder="氏名（必須）" style="min-width:200px;flex:1" value="${esc(hostForm?.name || "")}">
-          <input id="hTeam" placeholder="所属（任意）" style="min-width:200px;flex:1" value="${esc(hostForm?.team || "")}">
-          <button id="upsertBtn">追加/更新</button>
-        </div>
-      </details>
+    <div class="notice" style="margin-top:10px;">
+      この名簿を確認し、必要な場合だけ選手の追加・修正・削除を行ってください。
     </div>
+
+    <table style="margin-top:10px;">
+      <thead>
+        <tr>
+          <th>レーン</th>
+          <th>競技者番号</th>
+          <th>氏名</th>
+          <th>所属</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        ${
+          rows ||
+          `<tr>
+            <td colspan="5">
+              名簿はまだありません。
+            </td>
+          </tr>`
+        }
+      </tbody>
+    </table>
+
+
+    <div
+      style="
+        margin-top:20px;
+        padding-top:16px;
+        border-top:1px solid #ddd;
+      "
+    >
+      <div
+        class="big"
+        style="margin-bottom:10px;"
+      >
+        選手の追加・修正
+      </div>
+
+      <div class="row">
+        <input
+          id="hLane"
+          placeholder="レーン（必須）"
+          style="width:140px"
+          value="${esc(hostForm?.lane || "")}"
+        >
+
+        <input
+          id="hBib"
+          placeholder="競技者番号"
+          style="min-width:180px;flex:1"
+          value="${esc(hostForm?.bib || "")}"
+        >
+
+        <input
+          id="hName"
+          placeholder="氏名（必須）"
+          style="min-width:180px;flex:1"
+          value="${esc(hostForm?.name || "")}"
+        >
+
+        <input
+          id="hTeam"
+          placeholder="所属"
+          style="min-width:180px;flex:1"
+          value="${esc(hostForm?.team || "")}"
+        >
+
+        <button id="upsertBtn">
+          ${
+            hostEditingLane
+              ? "変更を反映"
+              : "選手を追加"
+          }
+        </button>
+      </div>
+
+      ${
+        hostEditingLane
+          ? `
+              <div
+                class="notice"
+                style="margin-top:10px;"
+              >
+                レーン${esc(hostEditingLane)}の選手を編集中です。
+                内容を変更して「変更を反映」を押してください。
+              </div>
+            `
+          : `
+              <div
+                class="muted"
+                style="margin-top:8px;"
+              >
+                新しい選手を追加する場合は、レーンと氏名を入力してください。
+              </div>
+            `
+      }
+    </div>
+
+  </details>
+</div>
+
     ${tokenTableHtml()}
     ${qrCardsHtml()}
   `);
