@@ -3,7 +3,6 @@
 // Run: node server.js
 
 const path = require("path");
-const os = require("os");
 const crypto = require("crypto");
 const express = require("express");
 const http = require("http");
@@ -74,16 +73,7 @@ function hhmmNow() {
   return `${hh}:${mm}`;
 }
 
-function localIPv4Candidates() {
-  const ifs = os.networkInterfaces();
-  const out = [];
-  for (const name of Object.keys(ifs)) {
-    for (const x of ifs[name] || []) {
-      if (x.family === "IPv4" && !x.internal) out.push(x.address);
-    }
-  }
-  return out;
-}
+
 
 
 async function applyGroup(group) {
@@ -961,9 +951,6 @@ if (op === "CANCEL") {
   });
 });
 
-// =====================================================
-// Listen
-// =====================================================
 // =====================================================
 // Startup
 // =====================================================
