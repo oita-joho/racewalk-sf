@@ -1834,20 +1834,13 @@ function hostView() {
             `).join("")}
           </select>
 
-            <button
-            id="loadBtn"
-            class="secondary"
-            ${raceActive ? "disabled" : ""}
-          >
-            読み込み
-          </button>
+            <button id="loadBtn" class="secondary" ${raceActive ? "disabled" : ""}>
+  グループ${hostSelectedGroup}の名簿を表示
+</button>
 
-          <button
-            id="saveBtn"
-            ${raceActive ? "disabled" : ""}
-          >
-            保存
-          </button>
+<button id="saveBtn" ${raceActive ? "disabled" : ""}>
+  グループ${hostSelectedGroup}の名簿として保存
+</button>
 
           ${
             raceActive
@@ -1858,7 +1851,7 @@ function hostView() {
                 `
               : `
                   <button id="applyBtn">
-                    このグループで開始（名簿反映＋ログ初期化）
+                    グループ${hostSelectedGroup}で競技開始
                   </button>
                 `
           }
@@ -2462,12 +2455,14 @@ if (resetBtn) {
     if (hName) hName.value = hostForm.name;
     if (hTeam) hTeam.value = hostForm.team;
 
-    if (groupSelect) {
-      groupSelect.addEventListener("change", () => {
-        hostSelectedGroup = parseInt(groupSelect.value, 10) || 1;
-        send({ op: "LOAD_ROSTER", group: hostSelectedGroup });
-      });
-    }
+if (groupSelect) {
+  groupSelect.addEventListener("change", () => {
+    hostSelectedGroup =
+      parseInt(groupSelect.value, 10) || 1;
+
+    render();
+  });
+}
 
     if (hLane) {
       hLane.addEventListener("input", () => {
