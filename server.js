@@ -110,12 +110,13 @@ function writeRoster(group, roster) {
 
 
 
-function applyGroup(group) {
+async function applyGroup(group) {
   const g =
     safeGroup(group);
 
   const roster =
-    readRoster(g);
+    await firebaseStore
+      .loadGroupRoster(g);
 
   raceState.applyGroup(
     g,
@@ -585,45 +586,88 @@ wss.on("connection", (ws) => {
     // -----------------------------
     // Host tools
     // -----------------------------
-    if (op === "LOAD_ROSTER") {
-      const g = safeGroup(msg.group);
-      const roster = readRoster(g);
-      send(ws, { op: "ROSTER_DATA", group: g, roster });
-      return;
+   if (op === "LOAD_ROSTER") {
+  const g =
+    safeGroup(msg.group);
+
+  const roster =
+    await firebaseStore
+      .loadGroupRoster(g);
+
+  send(ws, {
+    op: "ROSTER_DATA",
+    group: g,
+    roster,
+  });
+
+  return;
+}
+
+
+if (op === "SAVE_ROSTER") {
+  const g =
+    safeGroup(msg.group);
+
+  const roster =
+    Array.isArray(msg.roster)
+      ? msg.roster
+      : [];
+
+  const out = [];
+
+  for (const a of roster) {
+    const lane =
+      String(a.lane || "").trim();
+
+    const name =
+      String(a.name || "").trim();
+
+    if (!lane || !name) {
+      continue;
     }
 
-    if (op === "SAVE_ROSTER") {
-      const g = safeGroup(msg.group);
-      const roster = Array.isArray(msg.roster) ? msg.roster : [];
-      const out = [];
-
-      for (const a of roster) {
-        const lane = String(a.lane || "").trim();
-        const name = String(a.name || "").trim();
-
-        if (!lane || !name) continue;
-        if (!isHalfWidthDigits(lane)) continue;
-
-        out.push({
-          lane,
-          bib: String(a.bib || ""),
-          name,
-          team: String(a.team || ""),
-        });
-      }
-
-      writeRoster(g, out);
-      send(ws, { op: "OK", kind: "SAVE_ROSTER", group: g });
-      return;
+    if (!isHalfWidthDigits(lane)) {
+      continue;
     }
 
-    if (op === "CLEAR_ROSTER") {
-      const g = safeGroup(msg.group);
-      writeRoster(g, []);
-      send(ws, { op: "OK", kind: "CLEAR_ROSTER", group: g });
-      return;
-    }
+    out.push({
+      lane,
+      bib:
+        String(a.bib || ""),
+      name,
+      team:
+        String(a.team || ""),
+    });
+  }
 
+  await firebaseStore
+    .saveGroupRoster(g, out);
+
+  send(ws, {
+    op: "OK",
+    kind: "SAVE_ROSTER",
+    group: g,
+  });
+
+  return;
+}
+
+
+if (op === "CLEAR_ROSTER") {
+  const g =
+    safeGroup(msg.group);
+
+  await firebaseStore
+    .saveGroupRoster(g, []);
+
+  send(ws, {
+    op: "OK",
+    kind: "CLEAR_ROSTER",
+    group: g,
+  });
+
+  return;
+}
     if (op === "APPLY_GROUP") {
       const g = safeGroup(msg.group);
 
@@ -634,7 +678,7 @@ wss.on("connection", (ws) => {
         );
       }
 
-            applyGroup(g);
+      await applyGroup(g);
       state.raceActive = true;
 
       // 競技開始状態・グループ・名簿をFirebase保存
