@@ -1778,10 +1778,13 @@ function hostView() {
   return shell("設定係", `
     <div class="card">
       <div class="notice">
-        保存済み大会一覧から「選択」→グループの決定→保存→このグループで決定<br>
-        当日はQRコードを印刷して配布してください<br>
-        
-      </div>
+  <strong>当日の操作手順</strong><br>
+  ① 大会名簿を選択<br>
+  ② グループを選択<br>
+  ③ 名簿を確認・必要なら修正<br>
+  ④ グループ名簿として保存<br>
+  ⑤ 競技開始
+</div>
     </div>
 
 
@@ -1832,43 +1835,90 @@ function hostView() {
             : ""
         }
 
-        <div class="row" style="margin-top:10px;">
-          <select id="groupSelect" style="min-width:200px" ${raceActive ? "disabled" : ""}>
-            ${[1,2,3,4,5].map(g => `
-              <option value="${g}" ${g === hostSelectedGroup ? "selected" : ""}>グループ${g}</option>
-            `).join("")}
-          </select>
+<div style="margin-top:14px;">
+  <div style="font-weight:bold; margin-bottom:6px;">
+    使用するグループ
+  </div>
 
-            <button id="loadBtn" class="secondary" ${raceActive ? "disabled" : ""}>
-  グループ${hostSelectedGroup}の名簿を表示
-</button>
+  <select
+    id="groupSelect"
+    style="min-width:200px"
+    ${raceActive ? "disabled" : ""}
+  >
+    ${[1,2,3,4,5].map(g => `
+      <option
+        value="${g}"
+        ${g === hostSelectedGroup ? "selected" : ""}
+      >
+        グループ${g}
+      </option>
+    `).join("")}
+  </select>
+</div>
 
-<button id="saveBtn" ${raceActive ? "disabled" : ""}>
-  グループ${hostSelectedGroup}の名簿として保存
-</button>
 
-          ${
-            raceActive
-              ? `
-                  <button id="endRaceBtn" class="danger">
-                    現在の競技を終了
-                  </button>
-                `
-              : `
-                  <button id="applyBtn">
-                    グループ${hostSelectedGroup}で競技開始
-                  </button>
-                `
-          }
+<div style="margin-top:18px;">
+  <div style="font-weight:bold; margin-bottom:6px;">
+    名簿の準備
+  </div>
 
-          <button
-            id="clearBtn"
-            class="danger"
-            ${raceActive ? "disabled" : ""}
-          >
-            このグループ名簿を全消去
+  <div class="row">
+    <button
+      id="loadBtn"
+      class="secondary"
+      ${raceActive ? "disabled" : ""}
+    >
+      グループ${hostSelectedGroup}の名簿を表示
+    </button>
+
+    <button
+      id="saveBtn"
+      ${raceActive ? "disabled" : ""}
+    >
+      グループ${hostSelectedGroup}の名簿として保存
+    </button>
+  </div>
+</div>
+
+
+<div style="margin-top:18px;">
+  <div style="font-weight:bold; margin-bottom:6px;">
+    競技
+  </div>
+
+  ${
+    raceActive
+      ? `
+          <button id="endRaceBtn" class="danger">
+            現在の競技を終了
           </button>
-        </div>
+        `
+      : `
+          <button id="applyBtn">
+            グループ${hostSelectedGroup}で競技開始
+          </button>
+        `
+  }
+</div>
+
+
+<div style="margin-top:24px; padding-top:14px; border-top:1px solid #ddd;">
+  <details>
+    <summary style="cursor:pointer;">
+      名簿管理
+    </summary>
+
+    <div style="margin-top:10px;">
+      <button
+        id="clearBtn"
+        class="danger"
+        ${raceActive ? "disabled" : ""}
+      >
+        グループ${hostSelectedGroup}の名簿を全消去
+      </button>
+    </div>
+  </details>
+</div>
       </details>
     </div>
 
