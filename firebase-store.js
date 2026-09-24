@@ -438,7 +438,91 @@ async function getEventRoster(eventId) {
     roster,
   };
 }
+// =====================================================
+// 当日のグループ別名簿
+// =====================================================
 
+// グループ名簿をFirebaseへ保存
+async function saveGroupRoster(group, roster) {
+  const g = Math.min(
+    5,
+    Math.max(1, Number(group) || 1)
+  );
+
+  const cleanRoster = Array.isArray(roster)
+    ? roster.map((a) => ({
+        lane: String(a?.lane || "").trim(),
+        bib: String(a?.bib || ""),
+        name: String(a?.name || "").trim(),
+        team: String(a?.team || ""),
+      }))
+      .filter(
+        (a) =>
+          a.lane &&
+          a.name &&
+          /^\d+$/.test(a.lane)
+      )
+    : [];
+
+  await racewalkSystemRef().set(
+    {
+      groupRosters: {
+        [`group${g}`]: cleanRoster,
+      },
+
+      groupRostersUpdatedAt:
+        admin.firestore.FieldValue
+          .serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  return cleanRoster;
+}
+
+
+// グループ名簿をFirebaseから取得
+async function loadGroupRoster(group) {
+  const g = Math.min(
+    5,
+    Math.max(1, Number(group) || 1)
+  );
+
+  const doc =
+    await racewalkSystemRef().get();
+
+  if (!doc.exists) {
+    return [];
+  }
+
+  const data = doc.data() || {};
+
+  const roster =
+    data.groupRosters?.[`group${g}`];
+
+  if (!Array.isArray(roster)) {
+    return [];
+  }
+
+  return roster
+    .map((a) => ({
+      lane: String(a?.lane || "").trim(),
+      bib: String(a?.bib || ""),
+      name: String(a?.name || "").trim(),
+      team: String(a?.team || ""),
+    }))
+    .filter(
+      (a) =>
+        a.lane &&
+        a.name &&
+        /^\d+$/.test(a.lane)
+    )
+    .sort(
+      (a, b) =>
+        Number(a.lane) -
+        Number(b.lane)
+    );
+}
 // =====================================================
 // 設定係パスコード
 // =====================================================
@@ -508,6 +592,9 @@ module.exports = {
   getEvents,
   getEventRoster,
 
+  saveGroupRoster,
+  loadGroupRoster,
+
   saveHostPasscode,
-loadHostPasscode,
+  loadHostPasscode,
 };
