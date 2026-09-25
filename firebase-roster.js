@@ -53,9 +53,6 @@ function ensureFirebaseBox() {
   const isAdmin =
     location.hash.startsWith("#/admin");
 
-  const isHost =
-    location.hash.startsWith("#/host");
-
   let box = byId("firebaseBox");
   if (box) {
     if (box.parentNode !== mount) {
