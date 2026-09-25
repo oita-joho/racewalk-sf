@@ -2822,19 +2822,21 @@ function hhmmTo12(hhmm) {
 function applyRoute() {
   const p = routePath();
   const q = qs();
+
   roleToken = q.get("t") || "";
+  judgeId = null;
+
   // ===== 入口 =====
   if (p === "/") {
     role = "entrance";
-    judgeId = null;
     roleToken = "";
     render();
     return;
   }
-    // ===== 管理者ログイン =====
+
+  // ===== 管理者ログイン =====
   if (p === "/admin-login") {
     role = "admin-login";
-    judgeId = null;
     roleToken = "";
     render();
     return;
@@ -2843,66 +2845,77 @@ function applyRoute() {
   // ===== 管理者 =====
   if (p === "/admin") {
     role = "admin";
-    judgeId = null;
     roleToken = "";
     render();
     return;
   }
+
+  // ===== 設定係 =====
   if (p === "/host") {
-  role = "host";
-  judgeId = null;
-  render();
-
-  if (!socket || socket.readyState === WebSocket.CLOSED) {
-    connect();
-  } else if (socket.readyState === WebSocket.OPEN) {
-    hello();
-    send({ op: "LOAD_ROSTER", group: hostSelectedGroup });
-    send({ op: "GET_TOKENS" });
-  }
-
-  return;
-}
-
-  if (p === "/recorder") {
-    role = "recorder";
-    judgeId = null;
-    hello();
+    role = "host";
     render();
+
+    if (
+      !socket ||
+      socket.readyState === WebSocket.CLOSED
+    ) {
+      connect();
+    } else if (
+      socket.readyState === WebSocket.OPEN
+    ) {
+      hello();
+
+      send({
+        op: "LOAD_ROSTER",
+        group: hostSelectedGroup
+      });
+
+      send({
+        op: "GET_TOKENS"
+      });
+    }
+
     return;
   }
 
+  // ===== 掲示板 =====
   if (p === "/board") {
     role = "board";
-    judgeId = null;
     roleToken = "";
     hello();
     render();
     return;
   }
 
-  if (p === "/chief") {
-    role = "chief";
-    judgeId = null;
-    hello();
-    render();
-    return;
+  // ===== 記録員 =====
+  if (p === "/recorder") {
+    role = "recorder";
   }
 
-  if (p === "/chiefjudge") {
+  // ===== 記録主任 =====
+  else if (p === "/chief") {
+    role = "chief";
+  }
+
+  // ===== 審判主任 =====
+  else if (p === "/chiefjudge") {
     role = "chiefjudge";
     judgeId = "CJ";
-    hello();
-    render();
-    return;
   }
 
-  role = "judge";
-  judgeId = q.get("jid") || null;
+  // ===== 審判 =====
+  else {
+    role = "judge";
+    judgeId = q.get("jid") || null;
 
-  if (!judgeId) {
-    alert("審判URLに jid=J1 のようなIDが必要です。例: #/judge?jid=J1&t=xxxxx");
-    judgeId = "J1";
+    if (!judgeId) {
+      alert(
+        "審判URLに jid=J1 のようなIDが必要です。\n" +
+        "例: #/judge?jid=J1&t=xxxxx"
+      );
+
+      judgeId = "J1";
+    }
   }
 
   hello();
