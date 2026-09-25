@@ -983,10 +983,6 @@ function adminView() {
             設定係トークンを更新
           </button>
 
-                  <div
-            id="adminMessage"
-            style="margin-top:15px;"
-          ></div>
         </div>
 
 
